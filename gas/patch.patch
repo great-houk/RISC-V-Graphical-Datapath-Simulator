@@ -1,0 +1,13 @@
+diff --git a/libiberty/config.in b/libiberty/config.in
+index f7052b5d958..393601b85c8 100644
+--- a/libiberty/config.in
++++ b/libiberty/config.in
+@@ -202,7 +202,7 @@
+ #undef HAVE_PROCESS_H
+ 
+ /* Define to 1 if you have the `psignal' function. */
+-#undef HAVE_PSIGNAL
++#define HAVE_PSIGNAL 1
+ 
+ /* Define to 1 if you have the `pstat_getdynamic' function. */
+ #undef HAVE_PSTAT_GETDYNAMIC
