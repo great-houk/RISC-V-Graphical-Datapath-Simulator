@@ -126,11 +126,13 @@ export namespace Bits {
       return bits.slice().reverse()
    }
 
-   export function toString(bits: Bits | Number): string {
+   export function toString(bits: Bits | Bit | Number): string {
       if (bits instanceof Number) {
          return bits.toString(2)
+      } else if (bits instanceof Bits) {
+         return Bits.msb0(bits as Bits).join("")
       } else {
-         return Bits.msb0(bits).join("")
+         return (bits as Bit).toString()
       }
    }
 

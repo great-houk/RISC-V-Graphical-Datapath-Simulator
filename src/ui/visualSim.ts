@@ -104,7 +104,7 @@ export class VisualSim {
    /** Speed as ms between steps when playing */
    private speed(): number {
       let power = +($("#speed").val() as string) // (2 ** slider) steps per second 
-      return (1 / (2 ** power)) * 1000 // convert to ms per step
+      return (1 / power) * 1000 // convert to ms per step
    }
 
    private setupEvents() {
@@ -273,6 +273,7 @@ export class VisualSim {
       // We've got all the data so we can start the simulator
       this.sim.setCode(machineCode)
       this.sim.setRegisters(regs)
+      this.sim.ram.data.storeArray(0n, memWordSize / 8, mem);
 
       // setup Instruction Memory view
       let instrMemTable = $(this.instrMemPanel).find(".view tbody")

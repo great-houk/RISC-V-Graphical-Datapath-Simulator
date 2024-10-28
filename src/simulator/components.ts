@@ -13,7 +13,6 @@ enum State {
    EXECUTE,
    MEMORY,
    WRITEBACK,
-   RESET
 }
 enum ALUOp {
    Add,
@@ -164,7 +163,7 @@ export class Wires {
 }
 
 export class ControlFSM implements Component {
-   public state: State = State.RESET;
+   public state: State = State.FETCH;
    private wires: Wires;
 
    /*
@@ -205,23 +204,26 @@ export class ControlFSM implements Component {
       // Make memory load the next instruction
       if (this.state == State.FETCH) {
          // Memory is always reading
+         this.wires.memSize = MemSize.Word;
          this.wires.memAddrMuxSrc = MemAddrSrc.PC;
       }
-      // Decode the instruction and inc PC
+      // Decode the instruction
       else if (this.state == State.DECODE) {
          // Mem output should be the next instruction, so load it
          this.wires.loadInstr = 1;
-         // Inc PC
-         this.wires.pcSrc = PCSrc.PC4;
-         this.wires.loadPC = 1;
       }
       // Set up ALU
       else if (this.state == State.EXECUTE) {
-         if (this.wires.type == InstructionType.Register || this.wires.type == InstructionType.Immediate) {
+         if (this.wires.type == InstructionType.Register) {
             this.wires.aluAlt = this.wires.funct7[5];
             this.wires.aluOp = Bits.toNumber(this.wires.funct3);
             this.wires.aluSrc1 = ALUSrc1.Reg1;
-            this.wires.aluSrc2 = (this.wires.type == InstructionType.Register) ? ALUSrc2.Reg2 : ALUSrc2.Imm;
+            this.wires.aluSrc2 = ALUSrc2.Reg2;
+         } else if (this.wires.type == InstructionType.Immediate) {
+            this.wires.aluAlt = 0;
+            this.wires.aluOp = Bits.toNumber(this.wires.funct3);
+            this.wires.aluSrc1 = ALUSrc1.Reg1;
+            this.wires.aluSrc2 = ALUSrc2.Imm;
          } else if (this.wires.type == InstructionType.Upper) {
             this.wires.aluAlt = 0;
             this.wires.aluOp = ALUOp.Add;
@@ -234,7 +236,7 @@ export class ControlFSM implements Component {
             this.wires.aluSrc2 = ALUSrc2.Imm;
          } else if (this.wires.type == InstructionType.Branch) {
             this.wires.aluAlt = 1;
-            this.wires.aluOp = Bits.toNumber(this.wires.funct3.slice(1, 2));
+            this.wires.aluOp = Bits.toNumber(this.wires.funct3.slice(1, 3));
             this.wires.aluSrc1 = ALUSrc1.Reg1;
             this.wires.aluSrc2 = ALUSrc2.Reg2;
          } else if (this.wires.type == InstructionType.Jump) {
@@ -244,8 +246,9 @@ export class ControlFSM implements Component {
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
       }
-      // Read/Write from/to memory if necessary, set up branch controller, and set up ALU for branch addr
+      // Read/Write from/to memory if necessary, set up branch controller, set up ALU for branch addr, inc PC
       else if (this.state == State.MEMORY) {
+         // Memory
          if (this.wires.type == InstructionType.Store) {
             this.wires.memWrite = 1;
             this.wires.memAddrMuxSrc = MemAddrSrc.ALUOut;
@@ -255,9 +258,10 @@ export class ControlFSM implements Component {
             this.wires.memSize = Bits.toNumber(this.wires.funct3);
             this.wires.memUnsigned = this.wires.funct3[2];
          }
-
+         // Set up branch control
          if (this.wires.type == InstructionType.Branch) {
-            if (this.wires.funct3 == b`000` || this.wires.funct3 == b`001`) {
+            let funct3 = Bits.toInt(this.wires.funct3);
+            if (funct3 == 0n || funct3 == 1n) {
                this.wires.branchZero = !this.wires.funct3[0];
                this.wires.branchNotZero = this.wires.funct3[0];
             } else {
@@ -269,13 +273,16 @@ export class ControlFSM implements Component {
             this.wires.branchZero = 1;
             this.wires.branchNotZero = 1;
          }
-
+         // Calc addr for branches
          if (this.wires.type == InstructionType.Branch) {
             this.wires.aluAlt = 0;
             this.wires.aluOp = ALUOp.Add;
             this.wires.aluSrc1 = ALUSrc1.PC;
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
+         // Inc PC
+         this.wires.pcSrc = PCSrc.PC4;
+         this.wires.loadPC = 1;
       }
       // Write back to register file, and update PC if necessary
       else if (this.state == State.WRITEBACK) {
@@ -304,7 +311,7 @@ export class ControlFSM implements Component {
     * FETCH -> DECODE -> EXECUTE -> MEMORY -> WRITEBACK
     */
    falling_edge() {
-      this.state = this.state + 1 % 5;
+      this.state = (this.state + 1) % 5;
    }
 
    // Resets any outputs that can only be on for one clock cycle bc they would cause issues otherwise
@@ -318,7 +325,7 @@ export class ControlFSM implements Component {
 }
 
 export class InstructionMemory implements Component {
-   public instruction: Bits = Bits(0n, 32);
+   public instruction: Bits = Bits(0x0000_0013n, 32);
    private wires: Wires;
 
    private static type_table = new TruthTable<InstructionType>([
@@ -352,13 +359,14 @@ export class InstructionMemory implements Component {
       this.wires = wires;
    }
 
+   /**
+    * Unfortunatly, we have to do this on the rising edge because we need the register file to output rs1 and rs2 before the execute stage
+    */
    rising_edge() {
       if (this.wires.loadInstr) {
          this.instruction = this.wires.memReadData;
       }
-   }
 
-   falling_edge() {
       this.wires.opcode = this.instruction.slice(0, 7);
       this.wires.writeReg = this.instruction.slice(7, 12);
       this.wires.funct3 = this.instruction.slice(12, 15);
@@ -366,11 +374,13 @@ export class InstructionMemory implements Component {
       this.wires.readReg2 = this.instruction.slice(20, 25);
       this.wires.funct7 = this.instruction.slice(25, 32);
 
-      this.wires.type = InstructionMemory.type_table.match(this.instruction);
-      let imm_gen = InstructionMemory.immediate_table.match(this.instruction);
+      this.wires.type = InstructionMemory.type_table.match(this.wires.opcode);
+      let imm_gen = InstructionMemory.immediate_table.match(this.wires.opcode);
       let imm = imm_gen(this.instruction);
       this.wires.immediate = Bits.extended(imm, 32, true);
    }
+
+   falling_edge() { }
 
    reset_outputs() {
       this.wires.opcode = Bits(0n, 7);
@@ -401,7 +411,7 @@ export class RAM implements Component {
 
    rising_edge() {
       let addr = Bits.toInt(this.wires.memAddress, false);
-      let data = Bits.toInt(this.wires.writeData, false);
+      let data = Bits.toInt(this.wires.readData2, false);
       let size = RAM.table.match(this.wires.memSize);
 
       if (this.wires.memWrite) {
@@ -527,7 +537,7 @@ export class RegisterFile implements Component {
       if (this.wires.regWrite) {
          let writeReg = Bits.toNumber(this.wires.writeReg, false);
          if (writeReg != 0)
-            this.registers[writeReg] = this.wires.writeData;
+            this.registers[writeReg] = [...this.wires.writeData];
       }
    }
 
@@ -545,7 +555,6 @@ export class RegisterFile implements Component {
 }
 
 export class WriteDataMux implements Component {
-   public output: Bits = Bits(0n, 32); // 32 bits
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -554,26 +563,22 @@ export class WriteDataMux implements Component {
 
    rising_edge() {
       if (this.wires.writeDataMuxSrc == WriteDataSrc.ALUOut) {
-         this.output = this.wires.aluOut;
+         this.wires.writeData = this.wires.aluOut;
       } else if (this.wires.writeDataMuxSrc == WriteDataSrc.MemRead) {
-         this.output = this.wires.memReadData;
+         this.wires.writeData = this.wires.memReadData;
       } else if (this.wires.writeDataMuxSrc == WriteDataSrc.PC) {
-         this.output = this.wires.pcVal;
+         this.wires.writeData = this.wires.pcVal;
       }
    }
 
-   falling_edge() {
-      this.wires.writeData = this.output;
-   }
+   falling_edge() { }
 
    reset_outputs() {
-      this.output = Bits(0n, 32);
       this.wires.writeData = Bits(0n, 32);
    }
 }
 
 export class ALUSrcMux1 implements Component {
-   public output: Bits = []; // 32 bits
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -582,26 +587,22 @@ export class ALUSrcMux1 implements Component {
 
    rising_edge() {
       if (this.wires.aluSrc1 == ALUSrc1.Reg1) {
-         this.output = this.wires.readData1;
+         this.wires.ALUIn1 = this.wires.readData1;
       } else if (this.wires.aluSrc1 == ALUSrc1.PC) {
-         this.output = this.wires.pcVal;
+         this.wires.ALUIn1 = this.wires.pcVal;
       } else if (this.wires.aluSrc1 == ALUSrc1.Zero) {
-         this.output = Bits(0n, 32);
+         this.wires.ALUIn1 = Bits(0n, 32);
       }
    }
 
-   falling_edge() {
-      this.wires.ALUIn1 = this.output;
-   }
+   falling_edge() { }
 
    reset_outputs() {
-      this.output = Bits(0n, 32);
       this.wires.ALUIn1 = Bits(0n, 32);
    }
 }
 
 export class ALUSrcMux2 implements Component {
-   public output: Bits = []; // 32 bits
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -610,24 +611,20 @@ export class ALUSrcMux2 implements Component {
 
    rising_edge() {
       if (this.wires.aluSrc2 == ALUSrc2.Reg2) {
-         this.output = this.wires.readData2;
+         this.wires.aluIn2 = this.wires.readData2;
       } else if (this.wires.aluSrc2 == ALUSrc2.Imm) {
-         this.output = this.wires.immediate;
+         this.wires.aluIn2 = this.wires.immediate;
       }
    }
 
-   falling_edge() {
-      this.wires.aluIn2 = this.output;
-   }
+   falling_edge() { }
 
    reset_outputs() {
-      this.output = Bits(0n, 32);
       this.wires.aluIn2 = Bits(0n, 32);
    }
 }
 
 export class PCMux implements Component {
-   public output: Bits = []; // 32 bits
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -640,24 +637,20 @@ export class PCMux implements Component {
          if (nextVal > 2n ** 32n) {
             throw new Error("PC overflow");
          }
-         this.output = Bits(nextVal, 32);
+         this.wires.pcIn = Bits(nextVal, 32);
       } else if (this.wires.pcSrc == PCSrc.ALUOut) {
-         this.output = this.wires.aluOut;
+         this.wires.pcIn = this.wires.aluOut;
       }
    }
 
-   falling_edge() {
-      this.wires.pcIn = this.output;
-   }
+   falling_edge() { }
 
    reset_outputs() {
-      this.output = Bits(0n, 32);
       this.wires.pcIn = Bits(0n, 32);
    }
 }
 
 export class MemAddrMux implements Component {
-   public output: Bits = []; // 32 bits
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -666,18 +659,15 @@ export class MemAddrMux implements Component {
 
    rising_edge() {
       if (this.wires.memAddrMuxSrc == MemAddrSrc.ALUOut) {
-         this.output = this.wires.aluOut;
+         this.wires.memAddress = this.wires.aluOut;
       } else if (this.wires.memAddrMuxSrc == MemAddrSrc.PC) {
-         this.output = this.wires.pcVal;
+         this.wires.memAddress = this.wires.pcVal;
       }
    }
 
-   falling_edge() {
-      this.wires.memAddress = this.output;
-   }
+   falling_edge() { }
 
    reset_outputs() {
-      this.output = Bits(0n, 32);
       this.wires.memAddress = Bits(0n, 32);
    }
 }

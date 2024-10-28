@@ -1,7 +1,7 @@
 import { Bit, Bits } from "./bits"
 
 export type BitDontCares = (Bit | null)[]
-export type MatchInput = (Bits | number)[]
+export type MatchInput = Bits | Bit | number
 
 export class TruthTable<T> {
    // TODO Error Checking
@@ -23,8 +23,8 @@ export class TruthTable<T> {
     * Takes a bit array, and an array of bits or nulls for don't cares
     * Example: matchInputs([1, 0, 0], [1, null, 0]) 
     */
-   private static matchInput(input: Bits | number, expected: BitDontCares): boolean {
-      if (input instanceof Bits) {
+   private static matchInput(input: MatchInput, expected: BitDontCares): boolean {
+      if (input instanceof Array) {
          input = input as Bits;
       }
       else {
@@ -43,7 +43,7 @@ export class TruthTable<T> {
    /**
     * Return the proper output for the given inputs to the truth table.
     */
-   match(...inputs: MatchInput): T {
+   match(...inputs: MatchInput[]): T {
       for (let [rowInputs, rowOutputs] of this.table) {
          if (rowInputs.every((expected, i) => TruthTable.matchInput(inputs[i], expected))) {
             return rowOutputs

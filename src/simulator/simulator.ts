@@ -4,7 +4,7 @@ import * as Comp from "./components"
 export class Simulator {
    public code: bigint[] = []; // The code loaded in the simulator
 
-   public static readonly textStart = 0x0000_0000n // typically this would be 0x0001_0000 but lets use zero for simplicity.
+   public static readonly textStart = 0x0001_0000n // typically this would be 0x0001_0000 but lets use zero for simplicity.
 
    // components
    public wires: Comp.Wires;
@@ -28,26 +28,29 @@ export class Simulator {
 
    constructor(code: bigint[] = [], regs: Record<number, bigint> = {}) {
       this.wires = new Comp.Wires();
-
+      // FSM has to be run first, as it controls the Muxes, instruction memory, and other components
       this.controlFSM = new Comp.ControlFSM(this.wires);
       this.componentList.push(this.controlFSM);
-
+      // Muxes + Instruction mem have to run next, as they control a lot of data
       this.writeDataMux = new Comp.WriteDataMux(this.wires);
       this.aluSrcMux1 = new Comp.ALUSrcMux1(this.wires);
       this.aluSrcMux2 = new Comp.ALUSrcMux2(this.wires);
       this.pcMux = new Comp.PCMux(this.wires);
       this.memAddrMux = new Comp.MemAddrMux(this.wires);
       this.componentList.push(this.writeDataMux, this.aluSrcMux1, this.aluSrcMux2, this.pcMux, this.memAddrMux);
-
+      // Could run before muxes, but this looks nicer
       this.instructionMemory = new Comp.InstructionMemory(this.wires);
+      this.componentList.push(this.instructionMemory);
+      // These can all run in whatever order
       this.ram = new Comp.RAM(this.wires);
       this.pc = new Comp.PC(this.wires);
       this.jumpControl = new Comp.JumpControl(this.wires);
       this.alu = new Comp.ALU(this.wires);
       this.registerFile = new Comp.RegisterFile(this.wires);
-      this.componentList.push(this.instructionMemory, this.ram, this.pc, this.jumpControl, this.alu, this.registerFile);
-
+      this.componentList.push(this.ram, this.pc, this.jumpControl, this.alu, this.registerFile);
+      // Set some values before the start, bc PC only gets set on the second cycle, so the instruction decoder can load from the wrong addr
       this.pc.val = Bits(Simulator.textStart, 32);
+      this.wires.pcVal = this.pc.val;
       this.setRegisters({ 2: 0xBFFFFFF0n, 3: 0x10008000n }); // sp and gp
 
       this.setCode(code); // initialize code memory
