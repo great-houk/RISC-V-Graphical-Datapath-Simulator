@@ -34,16 +34,19 @@ export function Bits(num: number | bigint, length: number, signed?: boolean): Bi
 
 export function Bits(src: Bit[] | string | number | bigint, length?: number, signed?: boolean): Bits {
    if (typeof src == "object") {
-      if (length != undefined || signed != undefined) throw Error("Invalid arguments to Bits()")
+      if (length != undefined || signed != undefined)
+         throw Error("Invalid arguments to Bits() obj");
       return fromArray(src)
    } else if (typeof src == "string") {
-      if (length != undefined || signed != undefined) throw Error("Invalid arguments to Bits()")
+      if (length != undefined || signed != undefined)
+         throw Error("Invalid arguments to Bits() str");
       return fromString(src)
    } else if (typeof src == "bigint" || typeof src == "number") {
-      if (length == undefined) throw Error("Invalid arguments to Bits()")
+      if (length == undefined)
+         throw Error("Invalid arguments to Bits() num");
       return fromInt(src, length, signed)
    } else {
-      throw Error("Invalid arguments to Bits()")
+      throw Error("Invalid arguments to Bits() " + typeof src)
    }
 }
 

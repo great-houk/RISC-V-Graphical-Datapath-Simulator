@@ -4,7 +4,7 @@ import { assembleKeepLineInfo } from "assembler/assembler"
 import { Radix, parseInt, intToStr } from "utils/radix"
 
 import { Example, examples } from "./examples";
-import { DataPathElem, datapathElements } from "./datapath";
+// import { DataPathElem, datapathElements } from "./datapath";
 
 import $ from "jquery"
 import CodeMirror from "codemirror";
@@ -14,6 +14,7 @@ import "./risc-mode"
 import tippy, { followCursor, Instance as Tippy } from 'tippy.js';
 import "tippy.js/dist/tippy.css";
 import toastr from "toastr";
+import { Bits } from "utils/bits";
 
 type CodeMirror = CodeMirror.Editor
 
@@ -31,7 +32,7 @@ type State = "unstarted" | "running" | "done"
  */
 export class VisualSim {
    private sim: Simulator
-   private datapathElements: Record<string, DataPathElem> = {}
+   // private datapathElements: Record<string, DataPathElem> = {}
    private examples: Example[] = []
 
    private svg: HTMLElement
@@ -48,7 +49,7 @@ export class VisualSim {
    constructor() {
       this.sim = new Simulator()
       this.examples = examples
-      this.datapathElements = datapathElements
+      // this.datapathElements = datapathElements
 
       // initialize elements
       this.svg = $("#datapath svg")[0]
@@ -191,34 +192,34 @@ export class VisualSim {
    }
 
    private setupDatapath() {
-      for (let [id, config] of Object.entries(this.datapathElements)) {
-         let elem = $(this.svg).find(`#${id}`)
+      // for (let [id, config] of Object.entries(this.datapathElements)) {
+      //    let elem = $(this.svg).find(`#${id}`)
 
-         // Verify the SVG contains the things we expect
-         if (!elem.length) throw Error(`${id} doesn't exist`);
-         if (config.powered && !elem.hasClass("wire") && !elem.find(".wire").length)
-            throw Error(`#${id} has powered defined, but no ".wire" elements`);
+      //    // Verify the SVG contains the things we expect
+      //    if (!elem.length) throw Error(`${id} doesn't exist`);
+      //    if (config.powered && !elem.hasClass("wire") && !elem.find(".wire").length)
+      //       throw Error(`#${id} has powered defined, but no ".wire" elements`);
 
-         if (config.description || config.tooltip) {
-            tippy(elem[0], {
-               followCursor: true, // or "initial" keep it where you entered
-               allowHTML: true,
-               maxWidth: "20em",
-               plugins: [followCursor],
-            });
-         }
+      //    if (config.description || config.tooltip) {
+      //       tippy(elem[0], {
+      //          followCursor: true, // or "initial" keep it where you entered
+      //          allowHTML: true,
+      //          maxWidth: "20em",
+      //          plugins: [followCursor],
+      //       });
+      //    }
 
-         if (config.onclick) {
-            let onclick = config.onclick // rescope to capture current value and let typescript know is defined.
-            elem.on("click", (event) => onclick(this))
-         }
+      //    if (config.onclick) {
+      //       let onclick = config.onclick // rescope to capture current value and let typescript know is defined.
+      //       elem.on("click", (event) => onclick(this))
+      //    }
 
-         if (config.label && !elem.find("text.value-label").length)
-            throw Error(`#${id} has label defined, but no ".value-label" elements`);
+      //    if (config.label && !elem.find("text.value-label").length)
+      //       throw Error(`#${id} has label defined, but no ".value-label" elements`);
 
-         if (config.showSubElemsByValue && !elem.find("[data-show-on-value]").length)
-            throw Error(`#${id} has showSubElemsByValue defined, but no "[data-show-on-value]" elements`);
-      }
+      //    if (config.showSubElemsByValue && !elem.find("[data-show-on-value]").length)
+      //       throw Error(`#${id} has showSubElemsByValue defined, but no "[data-show-on-value]" elements`);
+      // }
 
       this.generateDynamicSvgCss()
    }
@@ -272,7 +273,6 @@ export class VisualSim {
       // We've got all the data so we can start the simulator
       this.sim.setCode(machineCode)
       this.sim.setRegisters(regs)
-      this.sim.dataMem.data.storeArray(0n, memWordSize / 8, mem)
 
       // setup Instruction Memory view
       let instrMemTable = $(this.instrMemPanel).find(".view tbody")
@@ -332,7 +332,7 @@ export class VisualSim {
 
          // update Register File input placeholders and values to match radix
          let registerTds = $(this.regFilePanel).find(".editor input").get()
-         for (let [i, reg] of this.sim.regFile.registers.entries()) {
+         for (let [i, reg] of this.sim.registerFile.registers.entries()) {
             $(registerTds[i]).prop("placeholder", intToStr(reg, regRadix))
             let valStr = $(registerTds[i]).val() as string
             if (valStr) { // update the current values to match the radix. Clear if invalid.
@@ -348,7 +348,7 @@ export class VisualSim {
          // Update Instruction Memory
          $(this.instrMemPanel).find(".current-instruction").removeClass("current-instruction")
          if (this.state != "done") { // don't show current instruction if we are done.
-            let line = Number((this.sim.pc.data - Simulator.textStart) / 4n)
+            let line = Number((Bits.toInt(this.sim.pc.val) - Simulator.textStart) / 4n)
             let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
             currentInstr.classList.add("current-instruction")
             currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
@@ -356,7 +356,7 @@ export class VisualSim {
 
          // Update Data Memory
          $(this.dataMemPanel).find(".view tbody").empty()
-         for (let [addr, val] of this.sim.dataMem.data.dump(memWordSize / 8)) {
+         for (let [addr, val] of this.sim.ram.data.dump(memWordSize / 8)) {
             let elem: string
             if (typeof addr == "bigint") {
                elem = `<tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(val, memRadix, memWordSize)}</td> </tr>`
@@ -368,7 +368,7 @@ export class VisualSim {
 
          // update Register File
          let registerTds = $(this.regFilePanel).find(".view .register-value").get()
-         for (let [i, reg] of this.sim.regFile.registers.entries()) {
+         for (let [i, reg] of this.sim.registerFile.registers.entries()) {
             $(registerTds[i]).text(`${intToStr(reg, regRadix)}`)
          }
       }
@@ -376,57 +376,57 @@ export class VisualSim {
 
    /** Updates datapath to match simulator state. */
    private updateDatapath() {
-      let running = (this.state == "running")
+      // let running = (this.state == "running")
 
-      $(this.svg).find(".hide-when-running").toggle(!running)
-      $(this.svg).find(".hide-when-not-running").toggle(running)
+      // $(this.svg).find(".hide-when-running").toggle(!running)
+      // $(this.svg).find(".hide-when-not-running").toggle(running)
 
-      for (let [id, config] of Object.entries(this.datapathElements)) {
-         let elem = $(this.svg).find(`#${id}`)
+      // for (let [id, config] of Object.entries(this.datapathElements)) {
+      //    let elem = $(this.svg).find(`#${id}`)
 
-         if (config.description || config.tooltip) {
-            let tooltip = (elem[0] as any)._tippy as Tippy
-            let value = running && config.tooltip ? config.tooltip(this.sim) : undefined
-            let description = (!running || !config.hideDescriptionWhenRunning) ? config.description : undefined
-            let content = [description, value].filter(s => s).join("<hr/>")
-            tooltip.setContent(content)
+      //    if (config.description || config.tooltip) {
+      //       let tooltip = (elem[0] as any)._tippy as Tippy
+      //       let value = running && config.tooltip ? config.tooltip(this.sim) : undefined
+      //       let description = (!running || !config.hideDescriptionWhenRunning) ? config.description : undefined
+      //       let content = [description, value].filter(s => s).join("<hr/>")
+      //       tooltip.setContent(content)
 
-            if (content) {
-               tooltip.enable()
-            } else {
-               tooltip.hide(); // disable will lock the tooltip open if it was open
-               tooltip.disable()
-            }
-         }
+      //       if (content) {
+      //          tooltip.enable()
+      //       } else {
+      //          tooltip.hide(); // disable will lock the tooltip open if it was open
+      //          tooltip.disable()
+      //       }
+      //    }
 
-         if (running && config.powered && config.powered(this.sim)) {
-            // add powered to elem if its a wire, and any wires under elem
-            elem.filter(".wire").add(elem.find(".wire")).addClass("powered")
-         } else {
-            elem.filter(".wire").add(elem.find(".wire")).removeClass("powered")
-         }
+      //    if (running && config.powered && config.powered(this.sim)) {
+      //       // add powered to elem if its a wire, and any wires under elem
+      //       elem.filter(".wire").add(elem.find(".wire")).addClass("powered")
+      //    } else {
+      //       elem.filter(".wire").add(elem.find(".wire")).removeClass("powered")
+      //    }
 
-         if (config.label) {
-            let content = running ? config.label(this.sim) : "" // set labels empty if not running
-            elem.find(".value-label").each((i, text) => {
-               // use first tspan if there is one, else place direclty in text element.
-               let labelElem = $(text).find("tspan")[0] ?? text
-               $(labelElem).text(content)
-            })
-         }
+      //    if (config.label) {
+      //       let content = running ? config.label(this.sim) : "" // set labels empty if not running
+      //       elem.find(".value-label").each((i, text) => {
+      //          // use first tspan if there is one, else place direclty in text element.
+      //          let labelElem = $(text).find("tspan")[0] ?? text
+      //          $(labelElem).text(content)
+      //       })
+      //    }
 
-         if (config.showSubElemsByValue) {
-            elem.find("[data-show-on-value]").hide()
-            if (running) {
-               let val = config.showSubElemsByValue(this.sim)
-               elem.find(`[data-show-on-value="${val}"]`).show()
-            }
-         }
+      //    if (config.showSubElemsByValue) {
+      //       elem.find("[data-show-on-value]").hide()
+      //       if (running) {
+      //          let val = config.showSubElemsByValue(this.sim)
+      //          elem.find(`[data-show-on-value="${val}"]`).show()
+      //       }
+      //    }
 
-         if (config.callback) {
-            config.callback(this)
-         }
-      }
+      //    if (config.callback) {
+      //       config.callback(this)
+      //    }
+      // }
    }
 
    /** update controls, editors, views, and datapath */

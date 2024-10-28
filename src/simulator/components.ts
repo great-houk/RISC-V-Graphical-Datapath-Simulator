@@ -57,7 +57,7 @@ enum InstructionType {
    Jump,
 }
 
-interface Component {
+export interface Component {
    /**
     * Read inputs, update state, store outputs
     */
@@ -487,7 +487,7 @@ export class ALU implements Component {
    }
 
    rising_edge() {
-      let [signed, op] = ALU.table.match([this.wires.aluOp, this.wires.aluAlt]);
+      let [signed, op] = ALU.table.match(this.wires.aluOp as number, this.wires.aluAlt);
 
       let in1 = Bits.toInt(this.wires.ALUIn1, signed);
       let in2 = Bits.toInt(this.wires.aluIn2, signed);
@@ -508,25 +508,26 @@ export class ALU implements Component {
 }
 
 export class RegisterFile implements Component {
-   public data: Bits[];
+   public registers: Bits[];
    public out1: Bits = Bits(0n, 32);
    public out2: Bits = Bits(0n, 32);
    private wires: Wires;
 
    constructor(wires: Wires) {
-      this.data = Array(32).fill(Bits(0n, 32));
+      this.registers = Array(32).fill(Bits(0n, 32));
       this.wires = wires;
    }
 
    rising_edge() {
       let reg1 = Bits.toNumber(this.wires.readReg1, false);
       let reg2 = Bits.toNumber(this.wires.readReg2, false);
-      this.out1 = this.data[reg1];
-      this.out2 = this.data[reg2];
+      this.out1 = this.registers[reg1];
+      this.out2 = this.registers[reg2];
 
       if (this.wires.regWrite) {
          let writeReg = Bits.toNumber(this.wires.writeReg, false);
-         this.data[writeReg] = this.wires.writeData;
+         if (writeReg != 0)
+            this.registers[writeReg] = this.wires.writeData;
       }
    }
 
