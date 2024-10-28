@@ -104,7 +104,7 @@ export class VisualSim {
    /** Speed as ms between steps when playing */
    private speed(): number {
       let power = +($("#speed").val() as string) // (2 ** slider) steps per second 
-      return (1 / power) * 1000 // convert to ms per step
+      return (1 / (2 ** power)) * 1000 // convert to ms per step
    }
 
    private setupEvents() {

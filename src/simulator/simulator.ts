@@ -89,7 +89,6 @@ export class Simulator {
          try {
             component.rising_edge();
          } catch (e) {
-            console.log("hi");
             if (e instanceof Comp.EndOfProgram)
                return false;
             else
