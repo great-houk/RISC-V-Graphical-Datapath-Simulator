@@ -349,7 +349,7 @@ export class VisualSim {
          // Update Instruction Memory
          $(this.instrMemPanel).find(".current-instruction").removeClass("current-instruction")
          if (this.state != "done") { // don't show current instruction if we are done.
-            let line = Number((Bits.toInt(this.sim.pc.val) - Simulator.textStart) / 4n)
+            let line = Number((this.sim.instructionMemory.addr - Simulator.textStart) / 4n)
             let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
             currentInstr.classList.add("current-instruction")
             currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })

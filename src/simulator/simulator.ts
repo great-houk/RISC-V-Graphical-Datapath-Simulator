@@ -51,6 +51,7 @@ export class Simulator {
       // Set some values before the start, bc PC only gets set on the second cycle, so the instruction decoder can load from the wrong addr
       this.pc.val = Bits(Simulator.textStart, 32);
       this.wires.pcVal = this.pc.val;
+      this.instructionMemory.addr = Bits.toInt(this.pc.val);
       this.setRegisters({ 2: 0xBFFFFFF0n, 3: 0x10008000n }); // sp and gp
 
       this.setCode(code); // initialize code memory
@@ -84,13 +85,20 @@ export class Simulator {
     */
    tick() {
       // Rising edge
-      this.componentList.forEach(component => {
-         component.rising_edge();
-      });
+      for (let component of this.componentList) {
+         try {
+            component.rising_edge();
+         } catch (e) {
+            console.log("hi");
+            if (e instanceof Comp.EndOfProgram)
+               return false;
+            else
+               throw e;
+         }
+      }
       // Falling edge
-      this.componentList.forEach(component => {
+      for (let component of this.componentList)
          component.falling_edge();
-      });
 
       return true
    }

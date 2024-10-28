@@ -71,6 +71,8 @@ export interface Component {
    reset_outputs(): void
 }
 
+export class EndOfProgram extends Error { }
+
 /**
  * Components should be run in this order:
  * 1. Control
@@ -326,6 +328,7 @@ export class ControlFSM implements Component {
 
 export class InstructionMemory implements Component {
    public instruction: Bits = Bits(0x0000_0013n, 32);
+   public addr: bigint = 0n;
    private wires: Wires;
 
    private static type_table = new TruthTable<InstructionType>([
@@ -363,8 +366,15 @@ export class InstructionMemory implements Component {
     * Unfortunatly, we have to do this on the rising edge because we need the register file to output rs1 and rs2 before the execute stage
     */
    rising_edge() {
+      // Load the instruction from memory
       if (this.wires.loadInstr) {
          this.instruction = this.wires.memReadData;
+         this.addr = Bits.toInt(this.wires.pcVal);
+      }
+
+      // Check if we've encountered the end of the program (0x0000_0000)
+      if (this.instruction.every(b => b == 0)) {
+         throw new EndOfProgram();
       }
 
       this.wires.opcode = this.instruction.slice(0, 7);
