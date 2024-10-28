@@ -73,7 +73,7 @@ const instrRules: Rule[] = [
       signature: ["id"],
       conv: (op, [label], line) => ({ type: "UJ", op: "jal", rd: "zero", imm: label, line: line }),
    }, {
-      instructions: ["lui"],
+      instructions: ["lui", "auipc"],
       format: "basic",
       signature: ["id", "num"],
       conv: (op, [rd, imm], line) => ({ type: "U", op: op, rd: rd, imm: imm, line: line }),

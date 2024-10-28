@@ -18,6 +18,7 @@ export const registers: Record<string, number> = {
                       // name  [opcode, funct3, funct7]
 export const opcodes: Record<string, [Bits, Bits, Bits]> = {
     "lui"  : [b`0110111`, b``   , b``       ],   // U-type
+    "auipc": [b`0010111`, b``   , b``       ],   // U-type
     "jal"  : [b`1101111`, b``   , b``       ],   // UJ-type
     "beq"  : [b`1100011`, b`000`, b``       ],   // SB-type
     "bne"  : [b`1100011`, b`001`, b``       ],   // SB-type
