@@ -353,7 +353,7 @@ export class InstructionMemory implements Component {
       // SB-type -> imm[12|10:5] | rs2 | rs1 | funct3 | imm[4:1|11]
       [["1100011"], (i) => Bits.join(i[31], i[7], i.slice(25, 31), i.slice(8, 12), 0)],
       // U-type -> imm[19:0] | rd | opcode
-      [["0X10111"], (i) => i.slice(12, 32)],
+      [["0X10111"], (i) => Bits.join(i.slice(12, 32), Bits(0n, 12))],
       // UJ-type -> imm[20|10:1|11|19:12] | rd | opcode
       [["1101111"], (i) => Bits.join(i[31], i.slice(12, 20), i[20], i.slice(21, 31), 0)],
    ])
