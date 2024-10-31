@@ -51,7 +51,6 @@ export class Simulator {
       // Set some values before the start, bc PC only gets set on the second cycle, so the instruction decoder can load from the wrong addr
       this.pc.val = Bits(Simulator.textStart, 32);
       this.wires.pcVal = this.pc.val;
-      this.instructionMemory.addr = Bits.toInt(this.pc.val);
       this.setRegisters({ 2: 0xBFFFFFF0n, 3: 0x10008000n }); // sp and gp
 
       this.setCode(code); // initialize code memory

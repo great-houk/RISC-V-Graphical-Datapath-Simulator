@@ -27,7 +27,7 @@ enum ALUOp {
 enum WriteDataSrc {
    ALUOut,
    MemRead,
-   PC,
+   PC4,
 }
 enum ALUSrc1 {
    Reg1,
@@ -106,6 +106,7 @@ export class Wires {
    // PC
    /* Set By PC */
    public pcVal: Bits = Bits(0n, 32); // 32 bits
+   public pcVal4: Bits = Bits(4n, 32); // 32 bits
    /* Set By PCMux */
    public pcIn: Bits = []; // 32 bits
    /* Set By Control */
@@ -115,8 +116,6 @@ export class Wires {
    /* Set By Control */
    public branchZero: Bit = 0;
    public branchNotZero: Bit = 0;
-   /* Set By Jump Control */
-   public shouldBranch: Bit = 0;
 
    // ALU
    /* Set By Control */
@@ -156,7 +155,7 @@ export class Wires {
    public aluSrc2: ALUSrc2 = 0; // 1 bit
 
    // PCMux
-   /* Set By Control */
+   /* Set By Jump Control */
    public pcSrc: PCSrc = 0; // 2 bits
 
    // MemAddrMux
@@ -248,7 +247,7 @@ export class ControlFSM implements Component {
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
       }
-      // Read/Write from/to memory if necessary, set up branch controller, set up ALU for branch addr, inc PC
+      // Read/Write from/to memory if necessary, set up branch controller, set up ALU for branch addr
       else if (this.state == State.MEMORY) {
          // Memory
          if (this.wires.type == InstructionType.Store) {
@@ -282,11 +281,8 @@ export class ControlFSM implements Component {
             this.wires.aluSrc1 = ALUSrc1.PC;
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
-         // Inc PC
-         this.wires.pcSrc = PCSrc.PC4;
-         this.wires.loadPC = 1;
       }
-      // Write back to register file, and update PC if necessary
+      // Write back to register file, and update PC
       else if (this.state == State.WRITEBACK) {
          if (this.wires.type == InstructionType.Register || this.wires.type == InstructionType.Immediate || this.wires.type == InstructionType.Upper) {
             this.wires.regWrite = 1;
@@ -298,13 +294,10 @@ export class ControlFSM implements Component {
             this.wires.regWrite = 0;
          } else if (this.wires.type == InstructionType.Jump) {
             this.wires.regWrite = 1;
-            this.wires.writeDataMuxSrc = WriteDataSrc.PC;
+            this.wires.writeDataMuxSrc = WriteDataSrc.PC4;
          }
-
-         if (this.wires.type == InstructionType.Branch || this.wires.type == InstructionType.Jump) {
-            this.wires.pcSrc = PCSrc.ALUOut;
-            this.wires.loadPC = this.wires.shouldBranch;
-         }
+         // Inc/branch PC, depending on what state Jump Control is in
+         this.wires.loadPC = 1;
       }
    }
 
@@ -323,12 +316,14 @@ export class ControlFSM implements Component {
       this.wires.memWrite = 0;
       this.wires.loadPC = 0;
       this.wires.regWrite = 0;
+      this.wires.loadPC = 0;
+      this.wires.branchNotZero = 0;
+      this.wires.branchZero = 0;
    }
 }
 
 export class InstructionMemory implements Component {
    public instruction: Bits = Bits(0x0000_0013n, 32);
-   public addr: bigint = 0n;
    private wires: Wires;
 
    private static type_table = new TruthTable<InstructionType>([
@@ -369,7 +364,6 @@ export class InstructionMemory implements Component {
       // Load the instruction from memory
       if (this.wires.loadInstr) {
          this.instruction = this.wires.memReadData;
-         this.addr = Bits.toInt(this.wires.pcVal);
       }
 
       // Check if we've encountered the end of the program (0x0000_0000)
@@ -453,6 +447,11 @@ export class PC implements Component {
 
    falling_edge() {
       this.wires.pcVal = this.val;
+      let nextVal = Bits.toInt(this.val, false) + 4n;
+      if (nextVal > 2n ** 32n) {
+         throw new Error("PC overflow");
+      }
+      this.wires.pcVal4 = Bits(nextVal, 32);
    }
 
    reset_outputs() { }
@@ -468,19 +467,19 @@ export class JumpControl implements Component {
    }
 
    rising_edge() {
+      this.shouldBranch = 0;
       if (this.wires.branchZero || this.wires.branchNotZero) {
-         this.shouldBranch = 0;
          this.shouldBranch = this.shouldBranch || (this.wires.branchZero && this.wires.aluZero);
          this.shouldBranch = this.shouldBranch || (this.wires.branchNotZero && !this.wires.aluZero);
       }
    }
 
    falling_edge() {
-      this.wires.shouldBranch = this.shouldBranch;
+      this.wires.pcSrc = this.shouldBranch ? PCSrc.ALUOut : PCSrc.PC4;
    }
 
    reset_outputs() {
-      this.wires.shouldBranch = 0;
+      this.wires.pcSrc = PCSrc.PC4;
    }
 }
 
@@ -576,8 +575,8 @@ export class WriteDataMux implements Component {
          this.wires.writeData = this.wires.aluOut;
       } else if (this.wires.writeDataMuxSrc == WriteDataSrc.MemRead) {
          this.wires.writeData = this.wires.memReadData;
-      } else if (this.wires.writeDataMuxSrc == WriteDataSrc.PC) {
-         this.wires.writeData = this.wires.pcVal;
+      } else if (this.wires.writeDataMuxSrc == WriteDataSrc.PC4) {
+         this.wires.writeData = this.wires.pcVal4;
       }
    }
 
@@ -643,11 +642,7 @@ export class PCMux implements Component {
 
    rising_edge() {
       if (this.wires.pcSrc == PCSrc.PC4) {
-         let nextVal = Bits.toInt(this.wires.pcVal, false) + 4n;
-         if (nextVal > 2n ** 32n) {
-            throw new Error("PC overflow");
-         }
-         this.wires.pcIn = Bits(nextVal, 32);
+         this.wires.pcIn = this.wires.pcVal4;
       } else if (this.wires.pcSrc == PCSrc.ALUOut) {
          this.wires.pcIn = this.wires.aluOut;
       }
