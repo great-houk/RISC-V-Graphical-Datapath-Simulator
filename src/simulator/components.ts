@@ -40,7 +40,11 @@ enum ALUSrc2 {
 }
 enum PCSrc {
    PC4,
-   ALUOut,
+   JumpControl,
+}
+enum JumpControlSrc {
+   PCImm,
+   RS1Imm,
 }
 enum MemAddrSrc {
    ALUOut,
@@ -107,7 +111,7 @@ export class Wires {
    /* Set By PC */
    public pcVal: Bits = Bits(0n, 32); // 32 bits
    public pcVal4: Bits = Bits(4n, 32); // 32 bits
-   /* Set By PCMux */
+   /* Set By PCSrcMux */
    public pcIn: Bits = []; // 32 bits
    /* Set By Control */
    public loadPC: Bit = 0;
@@ -116,6 +120,8 @@ export class Wires {
    /* Set By Control */
    public branchZero: Bit = 0;
    public branchNotZero: Bit = 0;
+   public jumpControlSrc: JumpControlSrc = 0; // 1 bit
+   public jumpAddr: Bits = []; // 32 bits
 
    // ALU
    /* Set By Control */
@@ -154,9 +160,9 @@ export class Wires {
    /* Set By Control */
    public aluSrc2: ALUSrc2 = 0; // 1 bit
 
-   // PCMux
+   // PCSrcMux
    /* Set By Jump Control */
-   public pcSrc: PCSrc = 0; // 2 bits
+   public pcSrc: PCSrc = 0; // 1 bit
 
    // MemAddrMux
    /* Set By Control */
@@ -191,6 +197,19 @@ export class ControlFSM implements Component {
          regWrite
          writeDataMuxSrc
    */
+
+   private static jump_table = new TruthTable<[Bit, Bit, JumpControlSrc]>([
+      // Opcode | Funct3 | JumpZero | JumpNotZero | JumpControlSrc
+      [["1100111", "XXX"], [1, 1, JumpControlSrc.RS1Imm]], // JALR
+      [["1101111", "XXX"], [1, 1, JumpControlSrc.PCImm]], // JAL
+      [["1100011", "000"], [1, 0, JumpControlSrc.PCImm]], // BEQ
+      [["1100011", "001"], [0, 1, JumpControlSrc.PCImm]], // BNE
+      [["1100011", "100"], [0, 1, JumpControlSrc.PCImm]], // BLT
+      [["1100011", "101"], [1, 0, JumpControlSrc.PCImm]], // BGE
+      [["1100011", "110"], [0, 1, JumpControlSrc.PCImm]], // BLTU
+      [["1100011", "111"], [1, 0, JumpControlSrc.PCImm]], // BGEU
+      [["XXXXXXX", "XXX"], [0, 0, JumpControlSrc.PCImm]], // Not a Jump
+   ]);
 
    constructor(wires: Wires) {
       this.wires = wires;
@@ -247,7 +266,7 @@ export class ControlFSM implements Component {
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
       }
-      // Read/Write from/to memory if necessary, set up branch controller, set up ALU for branch addr
+      // Read/Write from/to memory if necessary
       else if (this.state == State.MEMORY) {
          // Memory
          if (this.wires.type == InstructionType.Store) {
@@ -258,28 +277,6 @@ export class ControlFSM implements Component {
             this.wires.memAddrMuxSrc = MemAddrSrc.ALUOut;
             this.wires.memSize = Bits.toNumber(this.wires.funct3);
             this.wires.memUnsigned = this.wires.funct3[2];
-         }
-         // Set up branch control
-         if (this.wires.type == InstructionType.Branch) {
-            let funct3 = Bits.toInt(this.wires.funct3);
-            if (funct3 == 0n || funct3 == 1n) {
-               this.wires.branchZero = !this.wires.funct3[0];
-               this.wires.branchNotZero = this.wires.funct3[0];
-            } else {
-               this.wires.branchZero = this.wires.funct3[0];
-               this.wires.branchNotZero = !this.wires.funct3[0];
-            }
-         }
-         else if (this.wires.type == InstructionType.Jump) {
-            this.wires.branchZero = 1;
-            this.wires.branchNotZero = 1;
-         }
-         // Calc addr for branches
-         if (this.wires.type == InstructionType.Branch) {
-            this.wires.aluAlt = 0;
-            this.wires.aluOp = ALUOp.Add;
-            this.wires.aluSrc1 = ALUSrc1.PC;
-            this.wires.aluSrc2 = ALUSrc2.Imm;
          }
       }
       // Write back to register file, and update PC
@@ -296,6 +293,11 @@ export class ControlFSM implements Component {
             this.wires.regWrite = 1;
             this.wires.writeDataMuxSrc = WriteDataSrc.PC4;
          }
+         // Set up jump controller
+         let [branchZero, branchNotZero, jumpControlSrc] = ControlFSM.jump_table.match(this.wires.opcode, this.wires.funct3);
+         this.wires.branchZero = branchZero;
+         this.wires.branchNotZero = branchNotZero;
+         this.wires.jumpControlSrc = jumpControlSrc;
          // Inc/branch PC, depending on what state Jump Control is in
          this.wires.loadPC = 1;
       }
@@ -458,29 +460,33 @@ export class PC implements Component {
 }
 
 export class JumpControl implements Component {
-   // Controls PCMux
-   public shouldBranch: Bit = 0;
+   // Controls PCSrc and JumpAddr
    private wires: Wires;
 
    constructor(wires: Wires) {
       this.wires = wires;
    }
 
+   // Combinational, so everything changes on rising edge
    rising_edge() {
-      this.shouldBranch = 0;
-      if (this.wires.branchZero || this.wires.branchNotZero) {
-         this.shouldBranch = this.shouldBranch || (this.wires.branchZero && this.wires.aluZero);
-         this.shouldBranch = this.shouldBranch || (this.wires.branchNotZero && !this.wires.aluZero);
+      let shouldBranch = (this.wires.branchZero && this.wires.aluZero) || (this.wires.branchNotZero && !this.wires.aluZero);
+      this.wires.pcSrc = shouldBranch ? PCSrc.JumpControl : PCSrc.PC4;
+
+      let jumpAddr;
+      if (this.wires.jumpControlSrc == JumpControlSrc.PCImm) {
+         jumpAddr = Bits.toInt(this.wires.pcVal, false) + Bits.toInt(this.wires.immediate, false);
       }
+      // RS1Imm
+      else {
+         jumpAddr = Bits.toInt(this.wires.readData1, false) + Bits.toInt(this.wires.immediate, false);
+      }
+      this.wires.jumpAddr = Bits(jumpAddr, 33).slice(0, 32);
    }
 
    falling_edge() {
-      this.wires.pcSrc = this.shouldBranch ? PCSrc.ALUOut : PCSrc.PC4;
    }
 
-   reset_outputs() {
-      this.wires.pcSrc = PCSrc.PC4;
-   }
+   reset_outputs() { }
 }
 
 export class ALU implements Component {
@@ -633,7 +639,7 @@ export class ALUSrcMux2 implements Component {
    }
 }
 
-export class PCMux implements Component {
+export class PCSrcMux implements Component {
    private wires: Wires;
 
    constructor(wires: Wires) {
@@ -643,8 +649,8 @@ export class PCMux implements Component {
    rising_edge() {
       if (this.wires.pcSrc == PCSrc.PC4) {
          this.wires.pcIn = this.wires.pcVal4;
-      } else if (this.wires.pcSrc == PCSrc.ALUOut) {
-         this.wires.pcIn = this.wires.aluOut;
+      } else if (this.wires.pcSrc == PCSrc.JumpControl) {
+         this.wires.pcIn = this.wires.jumpAddr;
       }
    }
 
