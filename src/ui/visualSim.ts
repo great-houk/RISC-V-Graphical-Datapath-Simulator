@@ -351,8 +351,10 @@ export class VisualSim {
          if (this.state != "done") { // don't show current instruction if we are done.
             let line = Number((Bits.toInt(this.sim.wires.pcVal) - Simulator.textStart) / 4n)
             let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
-            currentInstr.classList.add("current-instruction")
-            currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
+            if (currentInstr) {
+               currentInstr.classList.add("current-instruction")
+               currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
+            }
          }
 
          // Update Data Memory
