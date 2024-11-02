@@ -326,7 +326,7 @@ export class ControlFSM implements Component {
       this.state = (this.state + 1) % 5;
    }
 
-   // Resets all outputs, because this comonent is purely combinational
+   // Resets all outputs, because this component is purely combinational
    reset_outputs() {
       this.wires.loadInstr = 0;
       this.wires.memWrite = 0;
@@ -460,10 +460,9 @@ export class PC implements Component {
 
    falling_edge() {
       this.wires.pcVal = this.val;
+
       let nextVal = Bits.toInt(this.val, false) + 4n;
-      if (nextVal > 2n ** 32n) {
-         throw new Error("PC overflow");
-      }
+      nextVal = nextVal & 0xFFFF_FFFFn; // Wrap in case of overflow
       this.wires.pcVal4 = Bits(nextVal, 32);
    }
 
@@ -483,12 +482,11 @@ export class JumpControl implements Component {
       let shouldBranch = (this.wires.branchZero && this.wires.aluZero) || (this.wires.branchNotZero && !this.wires.aluZero);
       this.wires.pcSrc = shouldBranch ? PCSrc.JumpControl : PCSrc.PC4;
 
-      let jumpAddr;
-      if (this.wires.jumpControlSrc == JumpControlSrc.PCImm) {
-         jumpAddr = Bits.toInt(this.wires.pcVal, false) + Bits.toInt(this.wires.immediate, false);
-      } else {
-         jumpAddr = Bits.toInt(this.wires.readData1, false) + Bits.toInt(this.wires.immediate, false);
-      }
+      let baseBits = this.wires.jumpControlSrc == JumpControlSrc.PCImm ? this.wires.pcVal : this.wires.readData1;
+      let base = Bits.toInt(baseBits, false);
+      let offset = Bits.toInt(this.wires.immediate, true);
+      let jumpAddr = base + offset;
+
       this.wires.jumpAddr = Bits(jumpAddr, 33).slice(0, 32);
    }
 
