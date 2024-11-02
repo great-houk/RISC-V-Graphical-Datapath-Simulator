@@ -47,17 +47,8 @@ enum JumpControlSrc {
    RS1Imm,
 }
 enum MemAddrSrc {
-   ALUOut,
-   PC
-}
-enum InstructionType {
-   Register,
-   Immediate,
-   Upper,
-   Load,
-   Store,
-   Branch,
-   Jump,
+   PC,
+   ALUOut
 }
 
 export interface Component {
@@ -93,7 +84,6 @@ export class Wires {
    public opcode: Bits = []; // 7 bits
    public funct3: Bits = []; // 3 bits
    public funct7: Bits = []; // 7 bits
-   public type: InstructionType = 0; // 3 bits
    public immediate: Bits = []; // 32 bits
 
    // RAM
@@ -205,8 +195,64 @@ export class ControlFSM implements Component {
          memAddrMuxSrc
    */
 
+   // Takes opcode
+   // Returns [aluAlt, aluOp, aluSrc1, aluSrc2, aluCalc]
+   private static alu_table = new TruthTable<[(funct3: Bits, funct7: Bits) => [Bit, ALUOp], ALUSrc1, ALUSrc2, Bit]>([
+      // R Type: funct7[5] determines add/sub and srl/sra. funct3 is always the same as the ALUOp
+      [["0110011"], [(funct3, funct7) => [funct7[5], Bits.toNumber(funct3) as ALUOp], ALUSrc1.Reg1, ALUSrc2.Reg2, 1]],
+      // I Type: Same as R type, funct3 determines the ALU op exactly. No weirdness with aluAlt this time
+      [["0010011"], [(funct3, _7) => [0, Bits.toNumber(funct3) as ALUOp], ALUSrc1.Reg1, ALUSrc2.Imm, 1]],
+      // AUIPC
+      [["0010111"], [(_3, _7) => [0, ALUOp.Add], ALUSrc1.PC, ALUSrc2.Imm, 1]],
+      // Load/Store
+      [["0X00011"], [(_3, _7) => [0, ALUOp.Add], ALUSrc1.Reg1, ALUSrc2.Imm, 1]],
+      // Branch: funct3[1:2] determines the ALUOp
+      [["1100011"], [(funct3, _7) => [1, Bits.toNumber(funct3.slice(1, 3)) as ALUOp], ALUSrc1.Reg1, ALUSrc2.Reg2, 1]],
+      // JALR
+      [["1100111"], [(_3, _7) => [0, ALUOp.Add], ALUSrc1.Reg1, ALUSrc2.Imm, 1]],
+      // JAL
+      [["1101111"], [(_3, _7) => [0, ALUOp.Add], ALUSrc1.PC, ALUSrc2.Imm, 1]],
+      // Anything else doesn't use the ALU, so return default values
+      [["XXXXXXX"], [(_3, _7) => [0, ALUOp.Add], ALUSrc1.Reg1, ALUSrc2.Reg2, 0]],
+   ]);
+
+   // Takes opcode, funct3
+   // Returns [memWrite, memAddrMuxSrc, memSize, memUnsigned]
+   private static memory_table = new TruthTable<[Bit, MemAddrSrc, MemSize, Bit]>([
+      // Load
+      [["0000011", "000"], [0, MemAddrSrc.ALUOut, MemSize.Byte, 0]],
+      [["0000011", "001"], [0, MemAddrSrc.ALUOut, MemSize.HalfWord, 0]],
+      [["0000011", "X10"], [0, MemAddrSrc.ALUOut, MemSize.Word, 0]], // Word isn't sign extended, so sign doesn't matter
+      [["0000011", "100"], [0, MemAddrSrc.ALUOut, MemSize.Byte, 1]],
+      [["0000011", "101"], [0, MemAddrSrc.ALUOut, MemSize.HalfWord, 1]],
+      // Store
+      [["0100011", "000"], [1, MemAddrSrc.ALUOut, MemSize.Byte, 0]],
+      [["0100011", "001"], [1, MemAddrSrc.ALUOut, MemSize.HalfWord, 0]],
+      [["0100011", "010"], [1, MemAddrSrc.ALUOut, MemSize.Word, 0]],
+      // Anything else doesn't use memory, so return default values
+      [["XXXXXXX", "XXX"], [0, MemAddrSrc.PC, MemSize.Word, 0]],
+   ]);
+
+   // Takes opcode
+   // Returns [regWrite, writeDataMuxSrc]
+   private static register_table = new TruthTable<[Bit, WriteDataSrc]>([
+      // R or I Type
+      [["0X10011"], [1, WriteDataSrc.ALUOut]],
+      // AUIPC
+      [["0010111"], [1, WriteDataSrc.ALUOut]],
+      // LUI
+      [["0110111"], [1, WriteDataSrc.Imm]],
+      // Load
+      [["0000011"], [1, WriteDataSrc.MemRead]],
+      // Jump
+      [["110X111"], [1, WriteDataSrc.PC4]],
+      // Doesn't write to a register
+      [["XXXXXXX"], [0, WriteDataSrc.ALUOut]],
+   ]);
+
+   // Takes opcode, funct3
+   // Returns [branchZero, branchNotZero, jumpControlSrc
    private static jump_table = new TruthTable<[Bit, Bit, JumpControlSrc]>([
-      // Opcode | Funct3 | JumpZero | JumpNotZero | JumpControlSrc
       [["1100111", "XXX"], [1, 1, JumpControlSrc.RS1Imm]], // JALR
       [["1101111", "XXX"], [1, 1, JumpControlSrc.PCImm]], // JAL
       [["1100011", "000"], [1, 0, JumpControlSrc.PCImm]], // BEQ
@@ -228,88 +274,46 @@ export class ControlFSM implements Component {
    rising_edge() {
       this.reset_outputs();
 
-      // Make memory load the next instruction
       if (this.state == State.FETCH) {
-         // Memory is always reading
+         // Load next instruction, so it's ready next cycle
          this.wires.memSize = MemSize.Word;
          this.wires.memAddrMuxSrc = MemAddrSrc.PC;
       }
-      // Decode the instruction
       else if (this.state == State.DECODE) {
-         // Mem output should be the next instruction, so load it
+         // Memory is outputting the instruction, so tell instruction memory to load it
          this.wires.loadInstr = 1;
       }
-      // Set up ALU
       else if (this.state == State.EXECUTE) {
-         if (this.wires.type == InstructionType.Register) {
-            this.wires.aluAlt = this.wires.funct7[5];
-            this.wires.aluOp = Bits.toNumber(this.wires.funct3);
-            this.wires.aluSrc1 = ALUSrc1.Reg1;
-            this.wires.aluSrc2 = ALUSrc2.Reg2;
-         } else if (this.wires.type == InstructionType.Immediate) {
-            this.wires.aluAlt = 0;
-            this.wires.aluOp = Bits.toNumber(this.wires.funct3);
-            this.wires.aluSrc1 = ALUSrc1.Reg1;
-            this.wires.aluSrc2 = ALUSrc2.Imm;
-         } else if (this.wires.type == InstructionType.Upper) {
-            this.wires.aluAlt = 0;
-            this.wires.aluOp = ALUOp.Add;
-            this.wires.aluSrc1 = ALUSrc1.PC;
-            this.wires.aluSrc2 = ALUSrc2.Imm;
-         } else if (this.wires.type == InstructionType.Load || this.wires.type == InstructionType.Store) {
-            this.wires.aluAlt = 0;
-            this.wires.aluOp = ALUOp.Add;
-            this.wires.aluSrc1 = ALUSrc1.Reg1;
-            this.wires.aluSrc2 = ALUSrc2.Imm;
-         } else if (this.wires.type == InstructionType.Branch) {
-            this.wires.aluAlt = 1;
-            this.wires.aluOp = Bits.toNumber(this.wires.funct3.slice(1, 3));
-            this.wires.aluSrc1 = ALUSrc1.Reg1;
-            this.wires.aluSrc2 = ALUSrc2.Reg2;
-         } else if (this.wires.type == InstructionType.Jump) {
-            this.wires.aluAlt = 0;
-            this.wires.aluOp = ALUOp.Add;
-            this.wires.aluSrc1 = this.wires.opcode[3] ? ALUSrc1.PC : ALUSrc1.Reg1; // opcode[3] differentiates between JAL and JALR
-            this.wires.aluSrc2 = ALUSrc2.Imm;
-         }
-         this.wires.aluCalc = 1;
+         // Set up ALU
+         let [func, aluSrc1, aluSrc2, aluCalc] = ControlFSM.alu_table.match(this.wires.opcode);
+         let [aluAlt, aluOp] = func(this.wires.funct3, this.wires.funct7);
+         this.wires.aluAlt = aluAlt;
+         this.wires.aluOp = aluOp;
+         this.wires.aluSrc1 = aluSrc1;
+         this.wires.aluSrc2 = aluSrc2;
+         this.wires.aluCalc = aluCalc;
       }
-      // Read/Write from/to memory if necessary
       else if (this.state == State.MEMORY) {
-         // Memory
-         if (this.wires.type == InstructionType.Store) {
-            this.wires.memWrite = 1;
-            this.wires.memAddrMuxSrc = MemAddrSrc.ALUOut;
-            this.wires.memSize = Bits.toNumber(this.wires.funct3);
-         } else if (this.wires.type == InstructionType.Load) {
-            this.wires.memAddrMuxSrc = MemAddrSrc.ALUOut;
-            this.wires.memSize = Bits.toNumber(this.wires.funct3);
-            this.wires.memUnsigned = this.wires.funct3[2];
-         }
+         // Write to or read from memory
+         let [memWrite, memAddrMuxSrc, memSize, memUnsigned] = ControlFSM.memory_table.match(this.wires.opcode, this.wires.funct3);
+         this.wires.memWrite = memWrite;
+         this.wires.memAddrMuxSrc = memAddrMuxSrc;
+         this.wires.memSize = memSize;
+         this.wires.memUnsigned = memUnsigned;
       }
-      // Write back to register file, and update PC
       else if (this.state == State.WRITEBACK) {
-         if (this.wires.type == InstructionType.Register || this.wires.type == InstructionType.Immediate) {
-            this.wires.regWrite = 1;
-            this.wires.writeDataMuxSrc = WriteDataSrc.ALUOut;
-         } else if (this.wires.type == InstructionType.Upper) {
-            this.wires.regWrite = 1;
-            this.wires.writeDataMuxSrc = this.wires.opcode[5] ? WriteDataSrc.Imm : WriteDataSrc.ALUOut; // opcode[5] differentiates between LUI and AUIPC
-         } else if (this.wires.type == InstructionType.Load) {
-            this.wires.regWrite = 1;
-            this.wires.writeDataMuxSrc = WriteDataSrc.MemRead;
-         } else if (this.wires.type == InstructionType.Store || this.wires.type == InstructionType.Branch) {
-            this.wires.regWrite = 0;
-         } else if (this.wires.type == InstructionType.Jump) {
-            this.wires.regWrite = 1;
-            this.wires.writeDataMuxSrc = WriteDataSrc.PC4;
-         }
+         // Write to register file
+         let [regWrite, writeDataMuxSrc] = ControlFSM.register_table.match(this.wires.opcode, this.wires.funct3);
+         this.wires.regWrite = regWrite;
+         this.wires.writeDataMuxSrc = writeDataMuxSrc;
+
          // Set up jump controller
          let [branchZero, branchNotZero, jumpControlSrc] = ControlFSM.jump_table.match(this.wires.opcode, this.wires.funct3);
          this.wires.branchZero = branchZero;
          this.wires.branchNotZero = branchNotZero;
          this.wires.jumpControlSrc = jumpControlSrc;
-         // Inc/branch PC, depending on what state Jump Control is in
+
+         // Inc/branch PC (determined by jump control)
          this.wires.loadPC = 1;
       }
    }
@@ -346,16 +350,6 @@ export class ControlFSM implements Component {
 export class InstructionMemory implements Component {
    public instruction: Bits = Bits(0x0000_0013n, 32);
    private wires: Wires;
-
-   private static type_table = new TruthTable<InstructionType>([
-      [["0110011"], InstructionType.Register],
-      [["0010011"], InstructionType.Immediate],
-      [["0X10111"], InstructionType.Upper],
-      [["0000011"], InstructionType.Load],
-      [["0100011"], InstructionType.Store],
-      [["1100011"], InstructionType.Branch],
-      [["110X111"], InstructionType.Jump],
-   ]);
 
    private static immediate_table = new TruthTable<(i: Bits) => Bits>([
       // R-type -> no immediate
@@ -399,7 +393,6 @@ export class InstructionMemory implements Component {
       this.wires.readReg2 = this.instruction.slice(20, 25);
       this.wires.funct7 = this.instruction.slice(25, 32);
 
-      this.wires.type = InstructionMemory.type_table.match(this.wires.opcode);
       let imm_gen = InstructionMemory.immediate_table.match(this.wires.opcode);
       let imm = imm_gen(this.instruction);
       this.wires.immediate = Bits.extended(imm, 32, true);
@@ -414,7 +407,6 @@ export class InstructionMemory implements Component {
       this.wires.readReg1 = Bits(0n, 5);
       this.wires.readReg2 = Bits(0n, 5);
       this.wires.funct7 = Bits(0n, 7);
-      this.wires.type = InstructionType.Register;
       this.wires.immediate = Bits(0n, 32);
    }
 }
