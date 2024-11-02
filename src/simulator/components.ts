@@ -28,11 +28,11 @@ enum WriteDataSrc {
    ALUOut,
    MemRead,
    PC4,
+   Imm,
 }
 enum ALUSrc1 {
    Reg1,
-   PC,
-   Zero,
+   PC
 }
 enum ALUSrc2 {
    Reg2,
@@ -130,7 +130,7 @@ export class Wires {
    public aluAlt: Bit = 0;
    public aluCalc: Bit = 0;
    /* Set By ALUSrcMux1 File */
-   public ALUIn1: Bits = []; // 32 bits
+   public aluIn1: Bits = []; // 32 bits
    /* Set By ALUSrcMux2 */
    public aluIn2: Bits = []; // 32 bits
    /* Set By ALU */
@@ -254,7 +254,7 @@ export class ControlFSM implements Component {
          } else if (this.wires.type == InstructionType.Upper) {
             this.wires.aluAlt = 0;
             this.wires.aluOp = ALUOp.Add;
-            this.wires.aluSrc1 = this.wires.opcode[5] ? ALUSrc1.Zero : ALUSrc1.PC; // opcode[5] differentiates between LUI and AUIPC
+            this.wires.aluSrc1 = ALUSrc1.PC;
             this.wires.aluSrc2 = ALUSrc2.Imm;
          } else if (this.wires.type == InstructionType.Load || this.wires.type == InstructionType.Store) {
             this.wires.aluAlt = 0;
@@ -289,9 +289,12 @@ export class ControlFSM implements Component {
       }
       // Write back to register file, and update PC
       else if (this.state == State.WRITEBACK) {
-         if (this.wires.type == InstructionType.Register || this.wires.type == InstructionType.Immediate || this.wires.type == InstructionType.Upper) {
+         if (this.wires.type == InstructionType.Register || this.wires.type == InstructionType.Immediate) {
             this.wires.regWrite = 1;
             this.wires.writeDataMuxSrc = WriteDataSrc.ALUOut;
+         } else if (this.wires.type == InstructionType.Upper) {
+            this.wires.regWrite = 1;
+            this.wires.writeDataMuxSrc = this.wires.opcode[5] ? WriteDataSrc.Imm : WriteDataSrc.ALUOut; // opcode[5] differentiates between LUI and AUIPC
          } else if (this.wires.type == InstructionType.Load) {
             this.wires.regWrite = 1;
             this.wires.writeDataMuxSrc = WriteDataSrc.MemRead;
@@ -528,7 +531,7 @@ export class ALU implements Component {
       if (this.wires.aluCalc) {
          let [signed, op] = ALU.table.match(this.wires.aluOp as number, this.wires.aluAlt);
 
-         let in1 = Bits.toInt(this.wires.ALUIn1, signed);
+         let in1 = Bits.toInt(this.wires.aluIn1, signed);
          let in2 = Bits.toInt(this.wires.aluIn2, signed);
 
          this.output = Bits(op(in1, in2), 33, signed).slice(0, 32);
@@ -598,6 +601,8 @@ export class WriteDataMux implements Component {
          this.wires.writeData = this.wires.memReadData;
       } else if (this.wires.writeDataMuxSrc == WriteDataSrc.PC4) {
          this.wires.writeData = this.wires.pcVal4;
+      } else if (this.wires.writeDataMuxSrc == WriteDataSrc.Imm) {
+         this.wires.writeData = this.wires.immediate;
       }
    }
 
@@ -617,18 +622,16 @@ export class ALUSrcMux1 implements Component {
 
    rising_edge() {
       if (this.wires.aluSrc1 == ALUSrc1.Reg1) {
-         this.wires.ALUIn1 = this.wires.readData1;
+         this.wires.aluIn1 = this.wires.readData1;
       } else if (this.wires.aluSrc1 == ALUSrc1.PC) {
-         this.wires.ALUIn1 = this.wires.pcVal;
-      } else if (this.wires.aluSrc1 == ALUSrc1.Zero) {
-         this.wires.ALUIn1 = Bits(0n, 32);
+         this.wires.aluIn1 = this.wires.pcVal;
       }
    }
 
    falling_edge() { }
 
    reset_outputs() {
-      this.wires.ALUIn1 = Bits(0n, 32);
+      this.wires.aluIn1 = Bits(0n, 32);
    }
 }
 
