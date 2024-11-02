@@ -121,12 +121,14 @@ export class Wires {
    public branchZero: Bit = 0;
    public branchNotZero: Bit = 0;
    public jumpControlSrc: JumpControlSrc = 0; // 1 bit
+   /* Set By Jump Control */
    public jumpAddr: Bits = []; // 32 bits
 
    // ALU
    /* Set By Control */
    public aluOp: ALUOp = 0; // 4 bits
    public aluAlt: Bit = 0;
+   public aluCalc: Bit = 0;
    /* Set By ALUSrcMux1 File */
    public ALUIn1: Bits = []; // 32 bits
    /* Set By ALUSrcMux2 */
@@ -175,27 +177,32 @@ export class ControlFSM implements Component {
 
    /*
    Signals:
-      Instr Mem:
+      Instruction Memory:
          loadInstr
-      Mem:
+      RAM:
          memWrite
          memSize
          memUnsigned
-         memAddrMuxSrc
       PC:
          loadPC
-         pcSrc
-      JumpControl:
+      Jump Control:
          branchZero
          branchNotZero
+         jumpControlSrc
       ALU:
          aluOp
          aluAlt
-         aluSrc1
-         aluSrc2
+         aluCalc
       Register File:
          regWrite
+      WriteDataMux:
          writeDataMuxSrc
+      ALUSrc1Mux:
+         aluSrc1
+      ALUSrc2Mux:
+         aluSrc2
+      MemAddrMux:
+         memAddrMuxSrc
    */
 
    private static jump_table = new TruthTable<[Bit, Bit, JumpControlSrc]>([
@@ -265,6 +272,7 @@ export class ControlFSM implements Component {
             this.wires.aluSrc1 = this.wires.opcode[3] ? ALUSrc1.PC : ALUSrc1.Reg1; // opcode[3] differentiates between JAL and JALR
             this.wires.aluSrc2 = ALUSrc2.Imm;
          }
+         this.wires.aluCalc = 1;
       }
       // Read/Write from/to memory if necessary
       else if (this.state == State.MEMORY) {
@@ -311,16 +319,24 @@ export class ControlFSM implements Component {
       this.state = (this.state + 1) % 5;
    }
 
-   // Resets any outputs that can only be on for one clock cycle bc they would cause issues otherwise
-   // Basically all the load signals
+   // Resets all outputs, because this comonent is purely combinational
    reset_outputs() {
       this.wires.loadInstr = 0;
       this.wires.memWrite = 0;
+      this.wires.memSize = MemSize.Word;
+      this.wires.memUnsigned = 0;
       this.wires.loadPC = 0;
-      this.wires.regWrite = 0;
-      this.wires.loadPC = 0;
-      this.wires.branchNotZero = 0;
       this.wires.branchZero = 0;
+      this.wires.branchNotZero = 0;
+      this.wires.jumpControlSrc = JumpControlSrc.PCImm;
+      this.wires.aluOp = ALUOp.Add;
+      this.wires.aluAlt = 0;
+      this.wires.aluCalc = 0;
+      this.wires.regWrite = 0;
+      this.wires.writeDataMuxSrc = WriteDataSrc.ALUOut;
+      this.wires.aluSrc1 = ALUSrc1.Reg1;
+      this.wires.aluSrc2 = ALUSrc2.Reg2;
+      this.wires.memAddrMuxSrc = MemAddrSrc.PC;
    }
 }
 
@@ -360,7 +376,7 @@ export class InstructionMemory implements Component {
    }
 
    /**
-    * Unfortunatly, we have to do this on the rising edge because we need the register file to output rs1 and rs2 before the execute stage
+    * Unfortunately, we have to do this on the rising edge because we need the register file to output rs1 and rs2 before the execute stage
     */
    rising_edge() {
       // Load the instruction from memory
@@ -475,16 +491,13 @@ export class JumpControl implements Component {
       let jumpAddr;
       if (this.wires.jumpControlSrc == JumpControlSrc.PCImm) {
          jumpAddr = Bits.toInt(this.wires.pcVal, false) + Bits.toInt(this.wires.immediate, false);
-      }
-      // RS1Imm
-      else {
+      } else {
          jumpAddr = Bits.toInt(this.wires.readData1, false) + Bits.toInt(this.wires.immediate, false);
       }
       this.wires.jumpAddr = Bits(jumpAddr, 33).slice(0, 32);
    }
 
-   falling_edge() {
-   }
+   falling_edge() { }
 
    reset_outputs() { }
 }
@@ -512,12 +525,14 @@ export class ALU implements Component {
    }
 
    rising_edge() {
-      let [signed, op] = ALU.table.match(this.wires.aluOp as number, this.wires.aluAlt);
+      if (this.wires.aluCalc) {
+         let [signed, op] = ALU.table.match(this.wires.aluOp as number, this.wires.aluAlt);
 
-      let in1 = Bits.toInt(this.wires.ALUIn1, signed);
-      let in2 = Bits.toInt(this.wires.aluIn2, signed);
+         let in1 = Bits.toInt(this.wires.ALUIn1, signed);
+         let in2 = Bits.toInt(this.wires.aluIn2, signed);
 
-      this.output = Bits(op(in1, in2), 33, signed).slice(0, 32);
+         this.output = Bits(op(in1, in2), 33, signed).slice(0, 32);
+      }
    }
 
    falling_edge() {
