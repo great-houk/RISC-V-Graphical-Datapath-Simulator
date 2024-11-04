@@ -25,9 +25,9 @@ enum ALUOp {
    And,
 }
 enum WriteDataSrc {
+   PC4,
    ALUOut,
    MemRead,
-   PC4,
    Imm,
 }
 enum ALUSrc1 {
