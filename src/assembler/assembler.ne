@@ -8,7 +8,9 @@ const lexer = moo.compile({
     comment: {match: /#.*?$/, value: x => undefined},
     number:  /0[bB][01]+|0[xX][0-9a-fA-F]+|[+-]?[0-9]+/,
     identifier: /[a-zA-Z_][a-zA-Z_0-9]*/,
+    directive: /\.[a-zA-Z_0-9]+/,
     symbol: [",", "(", ")", ":"],
+    anything: /[^\n]+/,
     error: moo.error, // return an error token instead of throwing, so we can get line number info.
 });
 
@@ -25,7 +27,7 @@ lexer.next = () => {
 
 program -> line {% id %} | line %newline program {% ([l, _, p]) => [...l, ...p] %}
 # split labels out as a separate "line"
-line -> (%identifier ":"):? instr:? %comment:? {% ([l, i, c]) => [l ? {type: "label", label: l[0].text} : null, i].filter(s => s) %}
+line -> (%identifier ":"):? instr:? directive:? %comment:? {% ([l, i, d, c]) => [l ? {type: "label", label: l[0].text} : null, i, d].filter(s => s) %}
 
 instr -> (basicInstr | displacementInstr)
          # We kept op as a token, now we get line number and convert to a string
@@ -43,4 +45,5 @@ arg -> (identifier | number) {% ([[arg]]) => arg %}
 identifier -> %identifier {% ([id]) => ({type: "id", value: id.text}) %}
 number -> %number {% ([n]) => ({type: "num", value: Number(n.text)}) %}
 
-
+directive -> %directive directiveArg:* {% ([d, ...args]) => ({type: "directive", directive: d.text, args: args[0]}) %}
+directiveArg -> (indentifier | number | %anything) {% ([[arg]]) => arg %}
