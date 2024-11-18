@@ -14,6 +14,11 @@ export const registers: Record<string, number> = {
     ...Object.fromEntries([...Array(32)].map((_, num) => [`x${num}`, num])),
 }
 
+export const HALT: Bit[] = [];
+const HALT_HEX = 0x0000_006F;
+for (let i = 0; i < 32; i++) {
+   HALT.push((HALT_HEX >> i) % 2)
+}
 
                       // name  [opcode, funct3, funct7]
 export const opcodes: Record<string, [Bits, Bits, Bits]> = {

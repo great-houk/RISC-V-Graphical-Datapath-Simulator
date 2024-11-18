@@ -238,14 +238,14 @@ export class VisualSim {
          return false
       }
 
-      if (assembled.length === 0) {
+      if (assembled.machineCode.length === 0) {
          this.error("Please enter some code to run.")
          return false
       }
 
       let lines = code.split("\n")
-      let asmCode = assembled.map(([line, instr]) => lines[line - 1].trim())
-      let machineCode = assembled.map(([line, instr]) => instr)
+      let asmCode: [bigint, string][] = assembled.instructions.map(([line, instr]) => [instr, lines[line - 1].trim()])
+      let machineCode = assembled.machineCode;
 
       let memRadix = this.dataMemRadix()
       let memWordSize = this.dataMemWordSize()
@@ -278,8 +278,7 @@ export class VisualSim {
       // setup Instruction Memory view
       let instrMemTable = $(this.instrMemPanel).find(".view tbody")
       instrMemTable.empty()
-      for (let [i, instr] of machineCode.entries()) {
-         let line = asmCode[i];
+      for (let [i, [instr, line]] of asmCode.entries()) {
          let addr = Simulator.textStart + BigInt(i * 4)
          instrMemTable.append(`
                 <tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${line}</td> </tr>
@@ -296,6 +295,10 @@ export class VisualSim {
                     <tr> <td>${name} (x${i})</td> <td class="register-value"></td> </tr>
                 `)
          }
+
+         regFileTable.append(`
+            <tr> <td>PC</td> <td class="register-value"></td> </tr>
+        `)
       }
 
       // Switch to views
@@ -374,6 +377,7 @@ export class VisualSim {
          for (let [i, reg] of this.sim.registerFile.registers.entries()) {
             $(registerTds[i]).text(`${intToStr(reg, regRadix)}`)
          }
+         $(registerTds[32]).text(`${intToStr(Bits.toInt(this.sim.wires.pcVal), regRadix)}`);
       }
    }
 

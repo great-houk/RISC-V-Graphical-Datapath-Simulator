@@ -18,7 +18,7 @@ export class Simulator {
    public pcMux: Comp.PCSrcMux;
    public memAddrMux: Comp.MemAddrMux;
 
-   public instructionMemory: Comp.InstructionMemory;
+   public instructionMemory: Comp.InstructionRegister;
    public ram: Comp.RAM;
    public pc: Comp.PC;
    public alu: Comp.ALU;
@@ -40,7 +40,7 @@ export class Simulator {
       this.memAddrMux = new Comp.MemAddrMux(this.wires);
       this.componentList.push(this.writeDataMux, this.aluSrcMux1, this.aluSrcMux2, this.pcMux, this.memAddrMux);
       // Could run before muxes, but this looks nicer
-      this.instructionMemory = new Comp.InstructionMemory(this.wires);
+      this.instructionMemory = new Comp.InstructionRegister(this.wires);
       this.componentList.push(this.instructionMemory);
       // These can all run in whatever order
       this.ram = new Comp.RAM(this.wires);

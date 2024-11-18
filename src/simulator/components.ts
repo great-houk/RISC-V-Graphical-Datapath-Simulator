@@ -1,6 +1,7 @@
 import { Memory } from "./memory"
 import { Bit, Bits, b } from "utils/bits"
 import { TruthTable } from "utils/truthTable"
+import { HALT } from "./constants"
 
 enum MemSize {
    Byte,
@@ -347,7 +348,7 @@ export class ControlFSM implements Component {
    }
 }
 
-export class InstructionMemory implements Component {
+export class InstructionRegister implements Component {
    public instruction: Bits = Bits(0x0000_0013n, 32);
    private wires: Wires;
 
@@ -382,7 +383,7 @@ export class InstructionMemory implements Component {
       }
 
       // Check if we've encountered the end of the program (0x0000_0000)
-      if (this.instruction.every(b => b == 0)) {
+      if (this.instruction.every((b, i) => b == HALT[i])) {
          throw new EndOfProgram();
       }
 
@@ -393,7 +394,7 @@ export class InstructionMemory implements Component {
       this.wires.readReg2 = this.instruction.slice(20, 25);
       this.wires.funct7 = this.instruction.slice(25, 32);
 
-      let imm_gen = InstructionMemory.immediate_table.match(this.wires.opcode);
+      let imm_gen = InstructionRegister.immediate_table.match(this.wires.opcode);
       let imm = imm_gen(this.instruction);
       this.wires.immediate = Bits.extended(imm, 32, true);
    }

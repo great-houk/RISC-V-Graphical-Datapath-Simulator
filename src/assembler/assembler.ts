@@ -4,21 +4,32 @@ import { Bit, Bits, b } from "utils/bits"
 import { registers, opcodes } from "simulator/constants";
 import grammar from './assembler.ne';
 
+interface Program { instructions: [number, bigint][], data: [number, bigint][], machineCode: bigint[] };
+
 // AST types that are returned from the parser.
 interface Arg { type: string, value: any }
-type AsmStatement = AsmLabel | AsmInstr
+type DirectiveArg = DirectiveString | DirectiveNumber;
+interface DirectiveString { type: "any", value: string }
+interface DirectiveNumber { type: "num", value: bigint }
+type AsmStatement = AsmLabel | AsmDirective | AsmInstr
 interface AsmLabel {
    type: "label"; label: string
 }
+interface AsmDirective {
+   type: "directive",
+   directive: string,
+   line: number,
+   args: DirectiveArg[],
+}
 interface AsmInstr {
-   type: "basic" | "displacement"
+   type: "basic" | "displacement" | "argless",
    line: number,
    op: string; args: Arg[]
 }
 
 // Represents each instruction type
 type Instr = RType | IType | ISType | SType | SBType | UType | UJype
-interface RType { type: "R", line: number, op: string, rd: string, rs1: string, rs2: number; }
+interface RType { type: "R", line: number, op: string, rd: string, rs1: string, rs2: string; }
 interface IType { type: "I", line: number, op: string, rd: string, rs1: string, imm: number | string } // string imm is a label
 // Shifts use a specialized I format, with 5 bit imm and funct7. There's no official name, so we'll just call the format "IS"
 interface ISType { type: "IS", line: number, op: string, rd: string, rs1: string, imm: number | string }
@@ -27,10 +38,55 @@ interface SBType { type: "SB", line: number, op: string, rs1: string, rs2: strin
 interface UType { type: "U", line: number, op: string, rd: string, imm: number | string }
 interface UJype { type: "UJ", line: number, op: string, rd: string, imm: number | string }
 
+type Directive = SizedData | Align;
+interface SizedData { data: bigint[], align: number }
+interface Align { align: number }
+
+function directiveMatch(directive: AsmDirective): Directive {
+   const sizedData = new Map([[".byte", 1], [".half", 2], [".word", 4], [".dword", 8]]);
+   const string = [".string"];
+   const align = [".align"];
+   if (sizedData.has(directive.directive)) {
+      if (directive.args.length == 1 && directive.args[0].type == "num") {
+         let size = sizedData.get(directive.directive) as number;
+         let value = directive.args[0].value;
+         if (value > 2n ** (8n * BigInt(size))) throw Error("Value can't fit in " + size + " bytes");
+         let data = [];
+         for (let i = 0; i < size; i++) {
+            data.push(value & 0xFFn);
+            value >>= 8n;
+         }
+         return { data: data, align: size }
+      } else {
+         throw Error("Invalid argument for " + directive.directive);
+      }
+   } else if (string.includes(directive.directive)) {
+      if (directive.args.length == 1 && directive.args[0].type == "any") {
+         let s = directive.args[0].value.substring(1, directive.args[0].value.length - 1); // Remove quotes
+         let data = [];
+         for (let char of s) {
+            data.push(BigInt(char.charCodeAt(0)));
+         }
+         data.push(0n); // null terminator
+         return { data: data, align: 4 }
+      } else {
+         throw Error("Invalid argument for " + directive.directive);
+      }
+   } else if (align.includes(directive.directive)) {
+      if (directive.args.length == 1 && directive.args[0].type == "num") {
+         return { align: Number(directive.args[0].value) }
+      } else {
+         throw Error("Invalid argument for " + directive.directive);
+      }
+   } else {
+      throw Error("Unknown directive")
+   }
+}
+
 /** Contains rules for the args and types of instructions and how to convert them. */
 interface Rule {
    instructions: string[]
-   format: "basic" | "displacement"
+   format: "basic" | "displacement" | "argless"
    signature: string[],
    conv: (op: string, args: any[], line: number) => Instr
 }
@@ -38,7 +94,7 @@ interface Rule {
 function ruleMatch(rule: Rule, instr: AsmInstr) {
    return (rule.instructions.includes(instr.op.toLowerCase())) &&
       (instr.type == rule.format) && (instr.args.length == rule.signature.length) &&
-      instr.args.every((arg, i) => arg.type == rule.signature[i])
+      instr.args.every((arg, i) => rule.signature[i] == 'any' || arg.type == rule.signature[i])
 }
 
 const instrRules: Rule[] = [
@@ -50,7 +106,7 @@ const instrRules: Rule[] = [
    }, {
       instructions: ["addi", "andi", "ori", "xori", "slti", "sltiu"],
       format: "basic",
-      signature: ["id", "id", "num"],
+      signature: ["id", "id", "any"],
       conv: (op, [rd, rs1, imm], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
    }, {
       instructions: ["slli", "srai", "srli"], // shifts are stored as a specialized I-format, 
@@ -65,8 +121,13 @@ const instrRules: Rule[] = [
    }, {
       instructions: ["jal"],
       format: "basic",
-      signature: ["id", "id"],
-      conv: (op, [rd, label], line) => ({ type: "UJ", op: op, rd: rd, imm: label, line: line }),
+      signature: ["id", "any"],
+      conv: (op, [rd, offset], line) => ({ type: "UJ", op: op, rd: rd, imm: offset, line: line }),
+   }, {
+      instructions: ["jal"],
+      format: "basic",
+      signature: ["any"],
+      conv: (op, [offset], line) => ({ type: "UJ", op: op, rd: "ra", imm: offset, line: line }),
    }, {
       instructions: ["j"],
       format: "basic",
@@ -75,7 +136,7 @@ const instrRules: Rule[] = [
    }, {
       instructions: ["lui", "auipc"],
       format: "basic",
-      signature: ["id", "num"],
+      signature: ["id", "any"],
       conv: (op, [rd, imm], line) => ({ type: "U", op: op, rd: rd, imm: imm, line: line }),
    }, {
       instructions: ["lb", "lbu", "lh", "lhu", "lw", "jalr"],
@@ -88,16 +149,6 @@ const instrRules: Rule[] = [
       signature: ["id", "num", "id"],
       conv: (op, [rs2, imm, rs1], line) => ({ type: "S", op: op, rs1: rs1, rs2: rs2, imm: imm, line: line }),
    }, {
-      instructions: ["jal"],
-      format: "basic",
-      signature: ["id", "id"],
-      conv: (op, [rd, label], line) => ({ type: "UJ", op: op, rd: rd, imm: label, line: line }),
-   }, {
-      instructions: ["jal"],
-      format: "basic",
-      signature: ["id"],
-      conv: (op, [label], line) => ({ type: "UJ", op: op, rd: "ra", imm: label, line: line }),
-   }, {
       instructions: ["mv"],
       format: "basic",
       signature: ["id", "id"],
@@ -105,11 +156,25 @@ const instrRules: Rule[] = [
    }, {
       instructions: ["li"], // Does not support greater than 12-bit immediates. You have to `lui` and `li` yourself
       format: "basic",
-      signature: ["id", "num"],
+      signature: ["id", "any"],
       conv: (op, [rd, imm], line) => ({ type: "I", op: "addi", rd: rd, rs1: "zero", imm: imm, line: line }),
-   },
-]
-
+   }, {
+      instructions: ["halt"],
+      format: "argless",
+      signature: [],
+      conv: (op, [], line) => ({ type: "UJ", op: "jal", rd: "zero", imm: 0, line: line }),
+   }, {
+      instructions: ["nop"],
+      format: "argless",
+      signature: [],
+      conv: (op, [], line) => ({ type: "I", op: "addi", rd: "zero", rs1: "zero", imm: 0, line: line }),
+   }, {
+      instructions: ["ret"],
+      format: "argless",
+      signature: [],
+      conv: (op, [], line) => ({ type: "I", op: "jalr", rd: "zero", rs1: "ra", imm: 0, line: line }),
+   }
+];
 
 /**
  * Parses the program using nearley, throws an error if nearley fails.
@@ -136,17 +201,23 @@ function parse(program: string): AsmStatement[] {
  * Assembles a RISC-V assembly program.
  * Returns a list of [lineNum, machineCodeInstruction] tuples, where lineNum is the 1 indexed line in the string.
  */
-export function assembleKeepLineInfo(program: string): [number, bigint][] {
+export function assembleKeepLineInfo(program: string): Program {
    let parsed = parse(program)
 
    let labels: Record<string, number> = {}
    let instructions: Instr[] = [];
-   let machineCode: [number, bigint][] = []
+   let directives: [Directive, number][] = [];
+   let instrMem: [number, bigint][] = [];
+   let dataMem: [number, bigint][] = [];
+   let machineCode: bigint[] = [];
 
    // Pass 1, read labels, convert AST into Instruction types
    for (let instr of parsed) {
       if (instr.type == "label") {
          labels[instr.label] = instructions.length // Point to next instruction
+      } else if (instr.type == "directive") {
+         let directive = directiveMatch(instr);
+         directives.push([directive, instr.line]);
       } else {
          let matchingRule = instrRules.find(r => ruleMatch(r, instr as AsmInstr))
          if (matchingRule) {
@@ -159,24 +230,58 @@ export function assembleKeepLineInfo(program: string): [number, bigint][] {
    }
 
    // Pass 2, actually assemble the assembly
-   for (let [instrNum, instr] of instructions.entries()) {
-      try {
-         var machineCodeInstr = assembleInstr(instrNum, instr, labels)
-      } catch (e: any) {
-         throw new AssemblerError(e.message, program, instr.line)
+   let i = 0;
+   let d = 0;
+   let offset = 0;
+   let align = 0;
+   while (i < instructions.length || d < directives.length) {
+      // Insert an instruction next
+      if (d >= directives.length || (i < instructions.length && instructions[i].line < directives[d][1])) {
+         let instr = instructions[i];
+         try {
+            var machineCodeInstr = assembleInstr(machineCode.length, instr, labels)
+         } catch (e: any) {
+            throw new AssemblerError(e.message, program, instr.line)
+         }
+         machineCode.push(Bits.toInt(machineCodeInstr));
+         instrMem.push([instr.line, Bits.toInt(machineCodeInstr)]);
+         i++;
       }
-      machineCode.push([instr.line, Bits.toInt(machineCodeInstr)])
+      // Insert a directive next
+      else {
+         let [directive, _] = directives[d];
+         let a;
+         if (align != 0)
+            a = align;
+         else
+            a = directive.align;
+
+         // Data directive (byte, word, string, etc...)
+         if ("data" in directive) {
+            offset += (a - (offset % a)) % a;
+            offset %= 4;
+
+            for (let data of directive.data) {
+               if (offset == 0) {
+                  machineCode.push(0n);
+                  dataMem.push([machineCode.length - 1, 0n]);
+               }
+
+               machineCode[machineCode.length - 1] |= data << (BigInt(offset) * 8n);
+               dataMem[dataMem.length - 1][1] |= data << (BigInt(offset) * 8n);
+               offset += 1;
+               offset %= 4;
+            }
+         }
+         // Alignment directive
+         else {
+            align = directive.align;
+         }
+         d++;
+      }
    }
 
-   return machineCode
-}
-
-/**
- * Assembles a RISC-V assembly program.
- * Returns a list of bigints representing the machine code
- */
-export function assemble(program: string): bigint[] {
-   return assembleKeepLineInfo(program).map(([line, instr]) => instr)
+   return { instructions: instrMem, data: dataMem, machineCode: machineCode };
 }
 
 /** Assembles a single instruction. */
