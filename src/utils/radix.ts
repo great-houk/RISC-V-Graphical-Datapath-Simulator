@@ -10,21 +10,21 @@ export type Radix = "hex" | "bin" | "signed" | "unsigned"
  * @param bits the number of bits the output will be. 
  */
 export function parseInt(str: string, radix: Radix, bits: number): bigint {
-    try {
-        if (radix == "hex") {
-            var num = BigInt( /^0[xb]/.test(str) ? str : `0x${str}` )
-        } else if (radix == "bin") {
-            var num = BigInt( /^0[xb]/.test(str) ? str : `0b${str}` )
-        } else if (radix == "signed") {
-            var num =  toTwosComplement(BigInt(str), bits)
-        } else { // (radix == "unsigned")
-            var num =  BigInt(str)
-        }
-        if (num < 0n || num >= 2n ** BigInt(bits)) throw Error() // just trigger catch.
-    } catch { // Int to big or parsing failed
-        throw Error(`"${str}" is invalid. Expected a ${bits} bit ${radix} integer.`)
-    }
-    return num
+	try {
+		if (radix == "hex") {
+			var num = BigInt(/^0[xb]/.test(str) ? str : `0x${str}`)
+		} else if (radix == "bin") {
+			var num = BigInt(/^0[xb]/.test(str) ? str : `0b${str}`)
+		} else if (radix == "signed") {
+			var num = toTwosComplement(BigInt(str), bits)
+		} else { // (radix == "unsigned")
+			var num = BigInt(str)
+		}
+		if (num < 0n || num >= 2n ** BigInt(bits)) throw Error() // just trigger catch.
+	} catch { // Int to big or parsing failed
+		throw Error(`"${str}" is invalid. Expected a ${bits} bit ${radix} integer.`)
+	}
+	return num
 }
 
 /**
@@ -32,22 +32,22 @@ export function parseInt(str: string, radix: Radix, bits: number): bigint {
  * @param bits the number of bits the output will be. If omitted and you pass a Bits, it 
  *             will get the size from the bits, otherwise it will default to 32.
  */
-export function intToStr(num: bigint|Bits, radix: string, bits?: number): string {
-    if (num instanceof Array) {
-        bits = bits ?? num.length
-        num = Bits.toInt(num)
-    } else {
-        bits = bits ?? 32
-    }
+export function intToStr(num: bigint | Bits, radix: string, bits?: number): string {
+	if (num instanceof Array) {
+		bits = bits ?? num.length
+		num = Bits.toInt(num)
+	} else {
+		bits = bits ?? 32
+	}
 
-    if (radix == "hex") {
-        return "0x" + num.toString(16).toUpperCase().padStart(Math.ceil(bits / 4), "0")
-    } else if (radix == "bin") {
-        return "0b" + num.toString(2).padStart(bits, "0")
-    } else if (radix == "signed") {
-        return fromTwosComplement(num, bits).toString()
-    } else { // (radix == "unsigned")
-        return num.toString()
-    }
+	if (radix == "hex") {
+		return "0x" + num.toString(16).toUpperCase().padStart(Math.ceil(bits / 4), "0")
+	} else if (radix == "bin") {
+		return "0b" + num.toString(2).padStart(bits, "0")
+	} else if (radix == "signed") {
+		return fromTwosComplement(num, bits).toString()
+	} else { // (radix == "unsigned")
+		return num.toString()
+	}
 }
 
