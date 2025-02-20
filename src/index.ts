@@ -13,19 +13,19 @@ import "css/site.css"
 import "../index.html"
 
 toastr.options = {
-   positionClass: "toast-top-left",
-   closeButton: true,
-   timeOut: 8000,
-   // timeOut: 0,
-   // extendedTimeOut: 0,
-   preventDuplicates: true,
+	positionClass: "toast-top-right",
+	closeButton: true,
+	timeOut: 8000,
+	// timeOut: 0,
+	// extendedTimeOut: 0,
+	preventDuplicates: true,
 }
 
-$(function() {
-   // Load databath svg then run the simulation. Load SVG inline so we can manipulate it.
-   $("#datapath").load(datapath, () => {
-      (window as any).sim = new VisualSim()
-   })
+$(function () {
+	// Load databath svg then run the simulation. Load SVG inline so we can manipulate it.
+	$("#datapath").load(datapath, () => {
+		(window as any).sim = new VisualSim()
+	})
 })
 
 
