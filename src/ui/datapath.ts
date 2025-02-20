@@ -104,226 +104,170 @@ const writeSrcNames = new TruthTable([
 ])
 
 
-
 /** All the elements in the datapath and how to render them, tooltips, etc. */
 export const datapathElements: Record<string, DataPathElem> = {
-	// Components
-	"pc": {
-		description: "The program counter stores the address of the current instruction.",
-		tooltip: (sim) => `Current Instruction: ${intToStr(sim.pc.val, "hex")}`,
+	// State Machine bold states
+	"statesBold": {
+		showSubElemsByValue: (sim) => intToStr(BigInt(sim.controlFSM.state), "unsigned"),
 	},
-	"instrMem": {
-		description: "Stores the program.",
-		onclick: (visSim) => $("#instrMem-tab").tab("show")
+	// State machine arrows
+	"ExReg": {
+		powered: (sim) => sim.controlFSM.skip_mem == 1,
 	},
-	"control": {
-		description: "Tells the rest of the processor what to do.",
+	"RegFetch": {
+		powered: (sim) => sim.controlFSM.state == 4,
 	},
-	"regFile": {
-		description: "Stores the 32 registers.",
-		onclick: (visSim) => $("#regFile-tab").tab("show")
+	"MemReg": {
+		powered: (sim) => sim.controlFSM.state == 3,
 	},
-	"immGen": {
-		description: "Extracts the sign-extended immediate from the instruction.",
+	"ExMem": {
+		powered: (sim) => sim.controlFSM.state == 2 && sim.controlFSM.skip_mem == 0,
 	},
-	"aluControl": {
-		description: "Tells the ALU which operation to preform.",
+	"DecEx": {
+		powered: (sim) => sim.controlFSM.state == 1,
 	},
-	"alu": {
-		description: "Does arithmetic on two values.",
-		tooltip: (sim) => aluSummaries.match(sim.wires.aluOp, sim.wires.aluAlt)(sim.wires.aluIn1, sim.wires.aluIn2),
+	"FetchDec": {
+		powered: (sim) => sim.controlFSM.state == 0,
 	},
+	// Muxes
 	"aluSrcMux1": {
-		description: "Switch between the immediate and the second source register.",
+		description: "Switch between the PC (0) and the first source register (1)",
 		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.aluSrc1), "unsigned"),
 	},
 	"aluSrcMux2": {
-		description: "Switch between the immediate and the second source register.",
+		description: "Switch between the immediate (0) and the second source register (1)",
 		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.aluSrc2), "unsigned"),
 	},
-	"dataMem": {
-		description: "Stores the data the program is working with.",
-		onclick: (visSim) => $("#dataMem-tab").tab("show")
-	},
-	"pcAdd4": {
-		description: "Increment PC to the next instruction.",
-	},
-	"jalrMux": {
-		description: "Switch between PC or source register 1. JALR sets the PC to a register plus an immediate.",
-		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.jumpControlSrc), "unsigned"),
-	},
-	"branchAdder": {
-		description: "Calculate the target address of a branch or jump.",
-	},
-	"jumpControl": {
-		description: "Determine whether a branch should be taken or not.",
-	},
 	"pcMux": {
-		description: "Switch between PC + 4 or the branch target.",
+		description: "Switch between the branch target (0) or PC + 4 (1)",
 		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.pcSrc), "unsigned"),
 	},
 	"writeSrcMux": {
-		description: "Switch between ALU result, memory read data, or PC + 4.",
+		description: "Switch between the read data (0), ALU result (1), PC + 4 (2), or the immediate (3)",
 		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.writeDataMuxSrc), "unsigned"),
 	},
-
-	// Wires
-	// "pc-out": {
-	// 	tooltip: (sim) => intToStr(sim.pc.out, "hex"),
-	// 	label: (sim) => intToStr(sim.pc.out, "hex"),
-	// },
-	// "instrMem-instruction": {
-	// 	tooltip: (sim) => intToStr(sim.instrMem.instruction, "hex"),
-	// 	label: (sim) => intToStr(sim.instrMem.instruction, "hex"),
-	// },
-	// "instrMem-instruction-opcode": {
-	// 	description: "The opcode of the instruction.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.opCode, "bin")} (${opCodeNames.match(sim.instrSplit.opCode)})`,
-	// 	label: (sim) => intToStr(sim.instrSplit.opCode, "bin"),
-	// },
-	// "instrMem-instruction-rd": {
-	// 	description: "The register to write.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.rd, "unsigned")} (${registerNames[Bits.toNumber(sim.instrSplit.rd)]})`,
-	// 	label: (sim) => intToStr(sim.instrSplit.rd, "unsigned"),
-	// },
-	// "instrMem-instruction-funct3": {
-	// 	description: "More bits to determine the instruction.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.funct3, "bin")}`, // TODO show what type of instruction?
-	// 	label: (sim) => intToStr(sim.instrSplit.funct3, "bin"),
-	// },
-	// "instrMem-instruction-rs1": {
-	// 	description: "The first register to read.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.rs1, "unsigned")} (${registerNames[Bits.toNumber(sim.instrSplit.rs1)]})`,
-	// 	label: (sim) => intToStr(sim.instrSplit.rs1, "unsigned"),
-	// },
-	// "instrMem-instruction-rs2": {
-	// 	description: "The second register to read.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.rs2, "unsigned")} (${registerNames[Bits.toNumber(sim.instrSplit.rs2)]})`,
-	// 	label: (sim) => intToStr(sim.instrSplit.rs2, "unsigned"),
-	// },
-	// "instrMem-instruction-funct7": {
-	// 	description: "More bits to determine the instruction.",
-	// 	tooltip: (sim) => `${intToStr(sim.instrSplit.funct7, "bin")}`,
-	// 	label: (sim) => intToStr(sim.instrSplit.funct7, "bin"),
-	// },
-	// "control-regWrite": {
-	// 	description: "Whether to write the register file.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.regWrite} (${sim.control.regWrite ? "write register file" : "don't write register file"})`,
-	// 	powered: (sim) => sim.control.regWrite != 0,
-	// },
-	// "control-aluSrc": {
-	// 	description: "Whether to use source register 2 or the immediate.",
-	// 	tooltip: (sim) => `${sim.control.aluSrc} (${sim.control.aluSrc ? "use immediate" : "use register"})`,
-	// 	powered: (sim) => sim.control.aluSrc != 0,
-	// },
-	// "control-memWrite": {
-	// 	description: "Whether to write memory.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.memWrite} (${sim.control.memWrite ? "write memory" : "don't write memory"})`,
-	// 	powered: (sim) => sim.control.memWrite != 0,
-	// },
-	// "control-aluOp": {
-	// 	description: "What type of instruction this is. ALU Control will determine the exact ALU operation to use.",
-	// 	tooltip: (sim) => `${intToStr(sim.control.aluOp, "bin")} (${aluOpNames.match(sim.control.aluOp)})`,
-	// 	powered: (sim) => Bits.toInt(sim.control.aluOp) != 0n,
-	// 	label: (sim) => intToStr(sim.control.aluOp, "bin"),
-	// },
-	// "control-writeSrc": {
-	// 	description: "What to write to the register file.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${intToStr(sim.control.writeSrc, "unsigned")} (write ${writeSrcNames.match(sim.control.writeSrc)} to register)`,
-	// 	powered: (sim) => Bits.toInt(sim.control.writeSrc) != 0n,
-	// 	label: (sim) => intToStr(sim.control.writeSrc, "unsigned"),
-	// },
-	// "control-memRead": {
-	// 	description: "Whether to read from memory.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.memRead} (${sim.control.memRead ? "read memory" : "don't read memory"})`,
-	// 	powered: (sim) => sim.control.memRead != 0,
-	// },
-	// "control-branchZero": {
-	// 	description: "Whether to branch when ALU result is zero.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.branchZero} (${sim.control.branchZero ? "branch on zero" : "don't branch on zero"})`,
-	// 	powered: (sim) => sim.control.branchZero != 0,
-	// },
-	// "control-branchNotZero": {
-	// 	description: "Whether to branch when ALU result is not zero.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.branchNotZero} (${sim.control.branchNotZero ? "branch on not zero" : "don't branch on not zero"})`,
-	// 	powered: (sim) => sim.control.branchNotZero != 0,
-	// },
-	// "control-jump": {
-	// 	description: "Unconditionally jump.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.control.jump} (${sim.control.jump ? "do jump" : "don't jump"})`,
-	// 	powered: (sim) => sim.control.jump != 0,
-	// },
-	// "control-jalr": {
-	// 	description: "Jump to a register + immediate.",
-	// 	tooltip: (sim) => `${sim.control.jalr} (${sim.control.jalr ? "do jump register" : "don't jump register"})`,
-	// 	powered: (sim) => sim.control.jalr != 0,
-	// },
-	// "immGen-immediate": {
-	// 	tooltip: (sim) => intToAll(sim.immGen.immediate),
-	// 	label: (sim) => intToStr(sim.immGen.immediate, "signed"),
-	// },
-	// "regFile-readData1": {
-	// 	tooltip: (sim) => intToAll(sim.regFile.readData1),
-	// 	label: (sim) => intToStr(sim.regFile.readData1, "signed"),
-	// },
-	// "regFile-readData2": {
-	// 	tooltip: (sim) => intToAll(sim.regFile.readData2),
-	// 	label: (sim) => intToStr(sim.regFile.readData2, "signed"),
-	// },
-	// "aluControl-aluControl": {
-	// 	description: "What operation for the ALU to preform.",
-	// 	tooltip: (sim) => `${intToStr(sim.aluControl.aluControl, "bin")} (${aluControlNames.match(sim.aluControl.aluControl)})`,
-	// 	label: (sim) => intToStr(sim.aluControl.aluControl, "bin"),
-	// },
-	// "aluInputMux-out": {
-	// 	tooltip: (sim) => intToAll(sim.aluInputMux.out),
-	// },
-	// "alu-result": {
-	// 	tooltip: (sim) => intToAll(sim.alu.result),
-	// 	label: (sim) => intToStr(sim.alu.result, "signed"),
-	// },
-	// "alu-zero": {
-	// 	description: "Whether the ALU result was zero.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.alu.zero} (ALU result was ${sim.alu.zero ? "zero" : "not zero"})`,
-	// 	powered: (sim) => sim.alu.zero != 0,
-	// },
-	// "literalFour": {
-	// 	tooltip: (sim) => "4",
-	// },
-	// "pcAdd4-result": {
-	// 	tooltip: (sim) => intToStr(sim.pcAdd4.result, "hex"),
-	// 	label: (sim) => intToStr(sim.pcAdd4.result, "hex"),
-	// },
-	// "branchAdder-result": {
-	// 	tooltip: (sim) => intToStr(sim.branchAdder.result, "hex"),
-	// 	label: (sim) => intToStr(sim.branchAdder.result, "hex"),
-	// },
-	// "jumpControl-takeBranch": {
-	// 	description: "Whether to take the branch or not.",
-	// 	hideDescriptionWhenRunning: true,
-	// 	tooltip: (sim) => `${sim.jumpControl.takeBranch} (${sim.jumpControl.takeBranch ? "take branch" : "don't take branch"})`,
-	// 	powered: (sim) => sim.jumpControl.takeBranch != 0,
-	// },
-	// "dataMem-readData": {
-	// 	tooltip: (sim) => intToAll(sim.dataMem.readData),
-	// },
-	// "pcMux-out": {
-	// 	tooltip: (sim) => intToStr(sim.pcMux.out, "hex"),
-	// 	label: (sim) => intToStr(sim.pcMux.out, "hex"),
-	// },
-	// "writeSrcMux-out": {
-	// 	tooltip: (sim) => intToAll(sim.writeSrcMux.out),
-	// 	label: (sim) => intToStr(sim.writeSrcMux.out, "hex"),
-	// },
-	// "jalrMux-out": {
-	// 	tooltip: (sim) => intToStr(sim.jalrMux.out, "hex"),
-	// },
+	"jalrMux": {
+		description: "Switch between PC (0) or first source register (1)",
+		showSubElemsByValue: (sim) => intToStr(BigInt(sim.wires.jumpControlSrc), "unsigned"),
+	},
+	// Control Wires
+	"pcLoad": {
+		description: "Load the new PC value",
+		powered: (sim) => sim.wires.loadPC == 1,
+	},
+	"branchNotZero": {
+		description: "Whether to branch when ALU result is not zero",
+		powered: (sim) => sim.wires.branchNotZero == 1,
+	},
+	"branchZero": {
+		description: "Whether to branch when ALU result is zero",
+		powered: (sim) => sim.wires.branchZero == 1,
+	},
+	"branchBaseSrc": {
+		description: "Whether to branch on the PC (0) or the first source register (1)",
+		powered: (sim) => sim.wires.jumpControlSrc == 1,
+	},
+	"aluCalc": {
+		description: "Load the new ALU inputs",
+		powered: (sim) => sim.wires.aluCalc == 1,
+	},
+	"aluOp": {
+		tooltip: (sim) => `Current ALU Op: ${intToStr(BigInt(sim.wires.aluOp), "bin", 4) + (sim.wires.aluAlt == 0 ? "0" : "1")} (${aluControlNames.match(sim.wires.aluOp, sim.wires.aluAlt)})`,
+	},
+	"aluSrc": {
+		tooltip: (sim) => `ALU Sources: ${sim.wires.aluSrc1 == 0 ? "PC" : "Reg 1"}, ${sim.wires.aluSrc2 == 0 ? "Immediate" : "Reg 2"}`,
+	},
+	"memFormat": {
+		tooltip: (sim) => `Memory Format: ${(sim.wires.memUnsigned == 0 ? "Signed" : "Unsigned") + (sim.wires.memSize == 0 ? " Byte" : (sim.wires.memSize == 1 ? " Halfword" : " Word"))}`,
+	},
+	"memWrite": {
+		description: "Whether to write to memory",
+		powered: (sim) => sim.wires.memWrite == 1,
+	},
+	"loadInstr": {
+		description: "Load the new instruction",
+		powered: (sim) => sim.wires.loadInstr == 1,
+	},
+	"regWrite": {
+		description: "Whether to write to the register file",
+		powered: (sim) => sim.wires.regWrite == 1,
+	},
+	"writeDataMuxSrc": {
+		tooltip: (sim) => `Reg Write Data Source: ${writeSrcNames.match(sim.wires.writeDataMuxSrc)}`,
+	},
+	// Instruction Wires
+	"opcodeWire": {
+		tooltip: (sim) => `Opcode: ${intToStr(Bits.toInt(sim.wires.opcode), "bin", 7)} (${opCodeNames.match(sim.wires.opcode)})`,
+	},
+	"funct3Wire": {
+		tooltip: (sim) => `Funct3: ${intToStr(Bits.toInt(sim.wires.funct3), "bin", 3)}`,
+	},
+	"funct7Wire": {
+		tooltip: (sim) => `Funct7: ${intToStr(Bits.toInt(sim.wires.funct7), "bin", 7)}`,
+	},
+	"rs1Wire": {
+		tooltip: (sim) => `Source Register 1: ${intToStr(Bits.toInt(sim.wires.readReg1), "bin", 5)} (${registerNames[Number(Bits.toInt(sim.wires.readReg1))]})`,
+	},
+	"rs2Wire": {
+		tooltip: (sim) => `Source Register 2: ${intToStr(Bits.toInt(sim.wires.readReg2), "bin", 5)} (${registerNames[Number(Bits.toInt(sim.wires.readReg2))]})`,
+	},
+	"writeRegWire": {
+		tooltip: (sim) => `Write Register: ${intToStr(Bits.toInt(sim.wires.writeReg), "bin", 5)} (${registerNames[Number(Bits.toInt(sim.wires.writeReg))]})`,
+	},
+	"immediateWire": {
+		tooltip: (sim) => `Immediate: ${intToStr(Bits.toInt(sim.wires.immediate), "hex")}`,
+	},
+	// Jump Control Wires
+	"pcSrc": {
+		powered: (sim) => sim.wires.pcSrc == 1,
+	},
+	"jumpZeroWire": {
+		powered: (sim) => sim.wires.branchZero == 1 && sim.wires.aluZero == 1,
+	},
+	"jumpNZeroWire": {
+		powered: (sim) => sim.wires.branchNotZero == 1 && sim.wires.aluZero == 0,
+	},
+	// Component + Wire tooltips
+	"pc": {
+		description: "The program counter stores the address of the current instruction.",
+		tooltip: (sim) => `Current Instruction Addr: ${intToStr(sim.pc.val, "hex")}`,
+	},
+	"pcInc": {
+		description: "Increment the program counter to the next instruction",
+		tooltip: (sim) => `PC + 4 = ${intToStr(sim.wires.pcVal4, "hex")}`,
+	},
+	"addrCalc": {
+		description: "Calculates the target jump address",
+		tooltip: (sim) => `Target Addr: ${intToStr(sim.wires.jumpAddr, "hex")}`,
+	},
+	"ir": {
+		description: "The instruction register stores the current instruction.",
+		tooltip: (sim) => `Current Instruction: ${intToStr(sim.instructionMemory.instr_delayed, "hex")}`,
+	},
+	"in1FF": {
+		tooltip: (sim) => `ALU Input 1: ${intToStr(sim.alu.in1_delayed, "hex")}`,
+	},
+	"in2FF": {
+		tooltip: (sim) => `ALU Input 2: ${intToStr(sim.alu.in2_delayed, "hex")}`,
+	},
+	"alu": {
+		description: "The Arithmetic Logic Unit performs the cpu's arithmetic operations",
+		tooltip: (sim) => `${aluSummaries.match(sim.alu.op_delayed, sim.alu.alt_delayed)(sim.alu.in1_delayed, sim.alu.in2_delayed)
+			} = ${intToStr(sim.wires.aluOut, "hex")}<br/>Zero: ${sim.wires.aluZero}`,
+	},
+	"dataMem": {
+		description: "Stores the data the program is working with.",
+		tooltip: (sim) => `Data Memory: ${intToStr(sim.ram.last_data_read, "hex")}`,
+	},
+	"registers": {
+		description: "Stores the 32 register values",
+		tooltip: (sim) => `Read Registers: ${registerNames[Number(Bits.toInt(sim.wires.readReg1))]}, ${registerNames[Number(Bits.toInt(sim.wires.readReg2))]}<br/>
+Read Data: ${intToStr(sim.wires.readData1, "hex")}, ${intToStr(sim.wires.readData2, "hex")}<br/>
+Write Register: ${registerNames[Number(Bits.toInt(sim.wires.writeReg))]}<br/>
+Write Data: ${intToStr(sim.wires.writeData, "hex")}`,
+	},
+	// Components
+	"instrMem": {
+		description: "Stores all of the instructions for the program",
+	},
 } 

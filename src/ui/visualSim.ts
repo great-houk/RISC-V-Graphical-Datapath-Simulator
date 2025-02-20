@@ -424,10 +424,10 @@ export class VisualSim {
 
 			if (config.showSubElemsByValue) {
 				elem.find("[data-show-on-value]").hide()
-				if (running) {
-					let val = config.showSubElemsByValue(this.sim)
-					elem.find(`[data-show-on-value="${val}"]`).show()
-				}
+				// if (running) {
+				let val = config.showSubElemsByValue(this.sim)
+				elem.find(`[data-show-on-value="${val}"]`).show()
+				// }
 			}
 
 			if (config.callback) {

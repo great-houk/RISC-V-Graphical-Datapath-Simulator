@@ -15,6 +15,7 @@ enum State {
 	EXECUTE,
 	MEMORY,
 	WRITEBACK,
+	Start,
 }
 enum ALUOp {
 	Add,
@@ -33,12 +34,12 @@ enum WriteDataSrc {
 	Imm,
 }
 enum ALUSrc1 {
+	PC,
 	Reg1,
-	PC
 }
 enum ALUSrc2 {
+	Imm,
 	Reg2,
-	Imm
 }
 enum PCSrc {
 	PC4,
@@ -50,7 +51,7 @@ enum JumpControlSrc {
 }
 enum MemAddrSrc {
 	PC,
-	ALUOut
+	ALUOut,
 }
 
 export interface Component {
@@ -164,7 +165,8 @@ export class Wires {
 }
 
 export class ControlFSM implements Component {
-	public state: State = State.FETCH;
+	public skip_mem: Bit = 0;
+	public state: State = State.Start;
 	private wires: Wires;
 
 	/*
@@ -307,9 +309,7 @@ export class ControlFSM implements Component {
 			this.wires.aluCalc = aluCalc;
 
 			// Skip memory if necessary
-			if (ControlFSM.should_skip_memory.match(this.wires.opcode)) {
-				this.state = State.MEMORY; // Falling edge adds one, so doing this skips memory stage
-			}
+			this.skip_mem = ControlFSM.should_skip_memory.match(this.wires.opcode);
 		}
 		else if (this.state == State.MEMORY) {
 			// Write to or read from memory
@@ -341,11 +341,18 @@ export class ControlFSM implements Component {
 	 * FETCH -> DECODE -> EXECUTE -> MEMORY -> WRITEBACK
 	 */
 	falling_edge() {
-		this.state = (this.state + 1) % 5;
+		this.state = this.state + 1;
+		if (this.state > State.WRITEBACK) {
+			this.state = State.FETCH;
+		}
+		if (this.skip_mem && this.state == State.MEMORY) {
+			this.state = State.WRITEBACK;
+		}
 	}
 
 	// Resets all outputs, because this component is purely combinational
 	reset_outputs() {
+		this.skip_mem = 0;
 		this.wires.loadInstr = 0;
 		this.wires.memWrite = 0;
 		this.wires.memSize = MemSize.Word;
@@ -358,7 +365,7 @@ export class ControlFSM implements Component {
 		this.wires.aluAlt = 0;
 		this.wires.aluCalc = 0;
 		this.wires.regWrite = 0;
-		this.wires.writeDataMuxSrc = WriteDataSrc.ALUOut;
+		this.wires.writeDataMuxSrc = WriteDataSrc.Imm;
 		this.wires.aluSrc1 = ALUSrc1.Reg1;
 		this.wires.aluSrc2 = ALUSrc2.Reg2;
 		this.wires.memAddrMuxSrc = MemAddrSrc.PC;
@@ -367,6 +374,7 @@ export class ControlFSM implements Component {
 
 export class InstructionRegister implements Component {
 	public instruction: Bits = Bits(0x0000_0013n, 32);
+	public instr_delayed: Bits = Bits(0x0, 32);
 	private wires: Wires;
 
 	private static immediate_table = new TruthTable<(i: Bits) => Bits>([
@@ -418,7 +426,9 @@ export class InstructionRegister implements Component {
 		this.wires.immediate = Bits.extended(imm, 32, true);
 	}
 
-	falling_edge() { }
+	falling_edge() {
+		this.instr_delayed = this.instruction;
+	}
 
 	reset_outputs() {
 		this.wires.opcode = Bits(0n, 7);
@@ -433,9 +443,10 @@ export class InstructionRegister implements Component {
 
 export class RAM implements Component {
 	public data: Memory;
+	public last_data_read: Bits = Bits(0n, 32);
 	public readOutput: Bits = []; // 32 bits
 	private wires: Wires;
-	private static table = new TruthTable<number>([
+	private static format = new TruthTable<number>([
 		[["00"], 1], // byte
 		[["01"], 2], // half-word
 		[["10"], 4], // word
@@ -449,12 +460,18 @@ export class RAM implements Component {
 	rising_edge() {
 		let addr = Bits.toInt(this.wires.memAddress, false);
 		let data = Bits.toInt(this.wires.readData2, false);
-		let size = RAM.table.match(this.wires.memSize);
+		let size = RAM.format.match(this.wires.memSize);
 
 		if (this.wires.memWrite) {
 			this.data.store(addr, size, data);
 		}
-		this.readOutput = Bits(this.data.load(addr, size), 32, false);
+
+		let bits = Bits(this.data.load(addr, size), size * 8);
+		this.readOutput = Bits.extended(bits, 32, this.wires.memUnsigned == 0);
+
+		if (this.wires.memAddrMuxSrc == MemAddrSrc.ALUOut) {
+			this.last_data_read = this.readOutput;
+		}
 	}
 
 	falling_edge() {
@@ -517,6 +534,14 @@ export class JumpControl implements Component {
 
 export class ALU implements Component {
 	public output: Bits = Bits(0n, 32, true);
+	public in1 = Bits(0n, 32);
+	public in1_delayed = Bits(0n, 32);
+	public in2 = Bits(0n, 32);
+	public in2_delayed = Bits(0n, 32);
+	public op: ALUOp = 0;
+	public op_delayed: ALUOp = 0;
+	public alt: Bit = 0;
+	public alt_delayed: Bit = 0;
 	private wires: Wires;
 
 
@@ -542,7 +567,12 @@ export class ALU implements Component {
 			let [signed, op] = ALU.table.match(this.wires.aluOp as number, this.wires.aluAlt);
 
 			let in1 = Bits.toInt(this.wires.aluIn1, signed);
+			this.in1 = this.wires.aluIn1;
 			let in2 = Bits.toInt(this.wires.aluIn2, signed);
+			this.in2 = this.wires.aluIn2;
+
+			this.op = this.wires.aluOp;
+			this.alt = this.wires.aluAlt;
 
 			this.output = Bits(op(in1, in2), 33, signed).slice(0, 32);
 		}
@@ -551,12 +581,20 @@ export class ALU implements Component {
 	falling_edge() {
 		this.wires.aluOut = this.output;
 		this.wires.aluZero = this.output.every(b => b == 0);
+		this.in1_delayed = this.in1;
+		this.in2_delayed = this.in2;
+		this.op_delayed = this.op;
+		this.alt_delayed = this.alt;
 	}
 
 	reset_outputs() {
 		this.output = Bits(0n, 32);
 		this.wires.aluOut = Bits(0n, 32);
 		this.wires.aluZero = 0;
+		this.in1 = Bits(0n, 32);
+		this.in2 = Bits(0n, 32);
+		this.op = 0;
+		this.alt = 0;
 	}
 }
 
