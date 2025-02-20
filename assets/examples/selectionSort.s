@@ -69,3 +69,4 @@ addi sp, sp, 8
 jalr x0, 0(ra)
 
 EXIT:
+halt

@@ -63,3 +63,4 @@ sort:
     jalr x0, 0(ra) # procedure return.
 
 quit:
+    exit
