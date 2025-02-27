@@ -14,7 +14,7 @@
 					<button class="nav-link active" id="datapath-tab" data-bs-toggle="tab"
 						data-bs-target="#datapath-panel" type="button" role="tab" aria-controls="datapath-panel"
 						aria-selected="true">
-						Datapath
+						Microarchitecture
 					</button>
 				</li>
 				<li class="nav-item" role="presentation">
@@ -130,14 +130,17 @@
 					<button id="pause" class="btn btn-sm" title="Pause Simulation">
 						<i class="fas fa-pause text-warning"></i>
 					</button>
-					<button id="step" class="btn btn-sm" title="Step Simulation">
+					<button id="next" class="btn btn-sm" title="Next Instruction">
+						<i class="fas fa-forward text-success"></i>
+					</button>
+					<button id="step" class="btn btn-sm" title="Step Clock">
 						<i class="fas fa-step-forward text-success"></i>
 					</button>
 					<button id="restart" class="btn btn-sm" title="Restart Simulation">
 						<i class="fas fa-sync text-danger"></i>
 					</button>
 					<div class="flex-grow-1">
-						<input id="speed" type="range" class="form-range" title="Speed" min="0" max="19">
+						<input id="speed" type="range" class="form-range" title="Speed" min="0" max="20" value="0">
 						<!-- 2 ** x steps per second -->
 					</div>
 					<button id="help" class="btn btn-sm" title="Help / About" data-bs-toggle="modal"

@@ -103,7 +103,9 @@ export class VisualSim {
 
 	/** Speed as ms between steps when playing */
 	private speed(): number {
-		let power = +($("#speed").val() as string) // (2 ** slider) steps per second 
+		let power = +($("#speed").val() as string) // (2 ** slider) steps per second
+		if (power == 20)
+			return 0 // Super speed mode
 		return (1 / (2 ** power)) * 1000 // convert to ms per step
 	}
 
@@ -126,6 +128,7 @@ export class VisualSim {
 		$("#play").on("click", (event) => this.play())
 		$("#pause").on("click", (event) => this.pause())
 		$("#speed").on("change", (event) => this.updatePlaySpeed())
+		$("#next").on("click", (event) => this.next_instruction())
 		$("#step").on("click", (event) => this.step())
 		$("#restart").on("click", (event) => this.restart())
 	}
@@ -316,6 +319,9 @@ export class VisualSim {
 
 		$("#pause").toggle(!!this.playing) // convert to bool
 
+		$("#next").toggle(!this.playing)
+		$("#next").prop("disabled", this.playing || this.state == "done")
+
 		$("#step").toggle(!this.playing)
 		$("#step").prop("disabled", this.playing || this.state == "done")
 
@@ -349,7 +355,7 @@ export class VisualSim {
 				}
 			}
 		} else { // this.state == "running" or this.state == "done"
-			// Update Instruction Memory
+			// Update Instruction Memory and microarch
 			$(this.instrMemPanel).find(".current-instruction").removeClass("current-instruction")
 			if (this.state != "done") { // don't show current instruction if we are done.
 				let line = Number((Bits.toInt(this.sim.wires.pcVal) - Simulator.textStart) / 4n)
@@ -357,6 +363,11 @@ export class VisualSim {
 				if (currentInstr) {
 					currentInstr.classList.add("current-instruction")
 					currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
+					// Set the current instruction in the microarch
+					let text = `${$(currentInstr).find("td").eq(0).text()}: ${$(currentInstr).find("td").eq(2).text()}`
+					// Limit text length to 34 characters
+					text = text.length > 50 ? text.slice(0, 50 - 3) + "..." : text
+					$(this.svg).find("#currentInstr").text(text)
 				}
 			}
 
@@ -452,10 +463,14 @@ export class VisualSim {
 
 	/** Starts or updates a setInterval() with the speed from the speed slider. */
 	public updatePlaySpeed() {
-		if (this.playing) this.pause()
+		if (this.playing)
+			this.pause()
+
+		let speed = this.speed();
 		this.playing = window.setInterval(() => {
-			if (!this.step()) this.pause() // keep stepping until the simulation is finished
-		}, this.speed())
+			if (!this.step(speed == 0 ? 100 : 1))
+				this.pause() // keep stepping until the simulation is finished
+		}, speed)
 		this.updateControls()
 	}
 
@@ -466,12 +481,13 @@ export class VisualSim {
 		this.updateControls()
 	}
 
-	/** Steps simulation. Returns true if we can continue stepping, or false if the simulation failed to start or is done. */
-	public step() {
+	/** Runs the machine until it hits the next instruction */
+	public next_instruction() {
+		// Start on first instruction and don't skip it
 		if (this.state == "unstarted")
-			this.start() // try to start, updates state to running if success
-
-		if (this.state == "running") { // don't do anything if we are "done" or if start failed
+			this.start()
+		// Run to finish of next instruction
+		while (this.state == "running") {
 			try {
 				let canContinue = this.sim.tick()
 				if (!canContinue) this.state = "done"
@@ -479,6 +495,34 @@ export class VisualSim {
 				this.state = "done"
 				this.error(`Error in simulation:\n${e.message}`)
 				console.error(e)
+			}
+
+			if (this.sim.controlFSM.state == 0) {
+				break
+			}
+		}
+		this.update()
+	}
+
+	/** Steps simulation. Returns true if we can continue stepping, or false if the simulation failed to start or is done. */
+	public step(count = 1) {
+		if (this.state == "unstarted")
+			this.start() // try to start, updates state to running if success
+
+		if (this.state == "running") { // don't do anything if we are "done" or if start failed
+			for (let i = 0; i < count; i++) {
+				try {
+					let canContinue = this.sim.tick()
+					if (!canContinue) {
+						this.state = "done"
+						break
+					}
+				} catch (e: any) { // this shouldn't happen.
+					this.state = "done"
+					this.error(`Error in simulation:\n${e.message}`)
+					console.error(e)
+					break
+				}
 			}
 		}
 		this.update()

@@ -14,7 +14,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <style
-     id="style1">.wires {   }
+     id="style1">.hide-when-not-running {  }
+.wires {   }
 .wire { stroke-opacity:1;    stroke-width:0.5;    stroke-miterlimit:4;    stroke-linejoin:miter;    stroke-linecap:butt;    stroke-dasharray:none;    stroke:#000000;    mix-blend-mode:normal;    fill:none;    display:inline; }
 text.value-label, text.value-label tspan { display:inline;    fill:#000000;    fill-opacity:1;    filter:url(#bg-filter);    font-family:monospace;    font-size:3.88056px;    font-stretch:normal;    font-style:normal;    font-variant:normal;    font-variant-caps:normal;    font-variant-east-asian:normal;    font-variant-ligatures:normal;    font-variant-numeric:normal;    font-weight:normal;    -inkscape-font-specification:'monospace, Normal';    line-height:1.25;    stroke:none;    stroke-width:0.264583;    text-align:center;    text-anchor:middle ; }
 .component { stroke-width:0.265;    stroke-opacity:1;    stroke-miterlimit:4;    stroke-linejoin:round;    stroke-linecap:round;    stroke:#000000;    fill-rule:evenodd;    fill-opacity:1;    fill:#fffffd; }
@@ -33,15 +34,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.0396254"
-     inkscape:cx="1520.74"
-     inkscape:cy="641.09628"
-     inkscape:window-width="2256"
-     inkscape:window-height="1398"
-     inkscape:window-x="-11"
-     inkscape:window-y="-11"
+     inkscape:zoom="0.7351262"
+     inkscape:cx="935.21357"
+     inkscape:cy="346.87922"
+     inkscape:window-width="1504"
+     inkscape:window-height="932"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg1" />
+     inkscape:current-layer="g39" />
   <defs
      id="defs1">
     <marker
@@ -426,14 +427,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="matrix(1.1215993,0,0,1,-52.986956,0)">
       <rect
          id="rect2"
-         width="246.25708"
-         height="71.416466"
-         x="435.75067"
+         width="314.66553"
+         height="71.416473"
+         x="367.40002"
          y="328.86118"
-         class="component" />
+         class="component"
+         ry="0" />
       <g
          id="g3"
-         inkscape:label="States">
+         inkscape:label="States"
+         transform="translate(-71.451747)">
         <ellipse
            style="fill:none;stroke:#000000;stroke-width:0.250222"
            id="path67"
@@ -474,7 +477,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="statesBold"
          inkscape:label="States Bold"
          style="display:inline"
-         transform="translate(-0.01637336,0.01760227)">
+         transform="translate(-71.468121,0.01760227)">
         <ellipse
            style="fill:none;stroke:#000000;stroke-width:0.944237;stroke-dasharray:none"
            id="path67-2"
@@ -523,58 +526,57 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
       </g>
       <path
          style="marker-end:url(#Arrow-9)"
-         d="m 471.56231,356.78879 9.44501,-2.44957"
+         d="m 400.11056,356.78879 9.44501,-2.44957"
          id="FetchDec"
          inkscape:label="FetchDec"
          class="wire" />
       <path
          style="marker-end:url(#Arrow-9)"
-         d="m 509.62596,348.80387 8.36719,-0.95435"
+         d="m 438.17421,348.80387 8.36719,-0.95435"
          id="DecEx"
          inkscape:label="DecEx"
          class="wire" />
       <path
          style="marker-end:url(#Arrow-9)"
-         d="m 547.12234,348.51757 9.35993,1.84512"
+         d="m 475.67059,348.51757 9.35993,1.84512"
          id="ExMem"
          inkscape:label="ExMem"
          class="wire" />
       <path
          style="marker-end:url(#Arrow-9)"
-         d="m 585.49799,353.86204 5.87122,1.65423"
+         d="m 514.04624,353.86204 5.87122,1.65423"
          id="MemReg"
          inkscape:label="MemReg"
          class="wire" />
       <path
          style="marker-end:url(#Arrow-9-3)"
-         d="m 604.18946,369.41827 c -14.54733,4.81244 -119.04475,9.32738 -137.33061,-1.09303"
+         d="m 532.73771,369.41827 c -14.54733,4.81244 -119.04475,9.32738 -137.33061,-1.09303"
          id="RegFetch"
          sodipodi:nodetypes="cc"
          inkscape:label="RegFetch"
          class="wire" />
       <path
          style="marker-end:url(#Arrow)"
-         d="m 555.31339,338.21023 c 0,0 39.3995,-13.26064 66.93304,6.71467"
+         d="m 470.89911,338.21023 c 0,0 35.12796,-13.26064 59.67643,6.71467"
          id="ExReg"
-         transform="matrix(0.89158402,0,0,1,47.242311,-2.0833332e-6)"
          sodipodi:nodetypes="cc"
          inkscape:label="ExReg"
          class="wire" />
       <text
          xml:space="preserve"
-         x="483.37793"
+         x="407.70654"
          y="340.31293"
          id="text72"
-         transform="scale(0.9442373,1.0590558)"
+         transform="scale(0.94423731,1.0590558)"
          class="component-name"><tspan
            sodipodi:role="line"
            id="tspan72"
            style="stroke-width:0.250223"
-           x="483.37793"
+           x="407.70654"
            y="340.31293">Fetch</tspan></text>
       <text
          xml:space="preserve"
-         x="524.39856"
+         x="448.72717"
          y="333.18588"
          id="text73"
          transform="scale(0.94423731,1.0590558)"
@@ -582,85 +584,68 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            sodipodi:role="line"
            id="tspan73"
            style="stroke-width:0.250223"
-           x="524.39856"
+           x="448.72717"
            y="333.18588">Decode</tspan></text>
       <text
          xml:space="preserve"
-         x="563.80896"
+         x="488.1376"
          y="329.46112"
          id="text74"
-         transform="scale(0.9442373,1.0590558)"
+         transform="scale(0.94423731,1.0590558)"
          class="component-name"><tspan
            sodipodi:role="line"
            id="tspan74"
            style="stroke-width:0.250223"
-           x="563.80896"
+           x="488.1376"
            y="329.46112">Execute</tspan></text>
       <text
          xml:space="preserve"
-         x="604.42084"
+         x="528.74945"
          y="330.54251"
          id="text75"
-         transform="scale(0.9442373,1.0590558)"
+         transform="scale(0.94423731,1.0590558)"
          class="component-name"><tspan
            sodipodi:role="line"
            id="tspan75"
            style="stroke-width:0.250223"
-           x="604.42084"
+           x="528.74945"
            y="330.54251">Memory</tspan><tspan
            sodipodi:role="line"
            style="stroke-width:0.250223"
-           x="604.42084"
+           x="528.74945"
            y="336.27515"
            id="tspan76">Writeback</tspan></text>
       <text
          xml:space="preserve"
-         x="641.54834"
+         x="565.87695"
          y="335.82922"
          id="text77"
-         transform="scale(0.9442373,1.0590558)"
+         transform="scale(0.94423731,1.0590558)"
          class="component-name"><tspan
            sodipodi:role="line"
            id="tspan77"
            style="stroke-width:0.250223"
-           x="641.54834"
+           x="565.87695"
            y="335.82922">Register</tspan><tspan
            sodipodi:role="line"
            style="stroke-width:0.250223"
-           x="641.54834"
+           x="565.87695"
            y="341.56186"
            id="tspan78">Writeback</tspan></text>
       <text
          xml:space="preserve"
-         x="658.97058"
-         y="315.52332"
-         id="text79"
-         transform="scale(0.94423731,1.0590558)"
-         class="label"><tspan
-           sodipodi:role="line"
-           id="tspan79"
-           style="stroke-width:0.250223"
-           x="658.97058"
-           y="315.52332">Current State:</tspan></text>
-      <text
-         xml:space="preserve"
          x="659.20483"
          y="321.1748"
-         id="text80"
-         transform="scale(0.94423731,1.0590558)"
-         class="label"
-         inkscape:label="currentStateDescription"
-         style="white-space:pre;inline-size:61.7981;display:inline"><tspan
+         id="currentInstr"
+         transform="matrix(0.94423731,0,0,1.0590558,-68.99241,21.414974)"
+         class="label  hide-when-not-running"
+         inkscape:label="currentInstr"
+         style="white-space:pre;inline-size:134.015;display:inline"><tspan
            x="659.20483"
            y="321.1748"
-           id="tspan7"><tspan
+           id="tspan2"><tspan
              style="stroke-width:0.250223"
-             id="tspan2">[describe what current state is </tspan></tspan><tspan
-           x="659.20483"
-           y="326.90745"
-           id="tspan9"><tspan
-             style="stroke-width:0.250223"
-             id="tspan8">doing]</tspan></tspan></text>
+             id="tspan1">0x0000addr: current instruction // Comment here</tspan></tspan></text>
     </g>
     <g
        id="writeDataMuxSrc"
@@ -868,7 +853,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="rotate(90,561.88687,274.90838)">
       <text
          xml:space="preserve"
-         x="-400.84155"
+         x="-477.27936"
          y="675.8819"
          id="text60"
          class="label"
@@ -876,11 +861,11 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            sodipodi:role="line"
            id="tspan60"
            style="stroke-width:0.265"
-           x="-400.84155"
+           x="-477.27936"
            y="675.8819">branchBaseSrc</tspan></text>
       <path
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;marker-end:url(#Arrow)"
-         d="M 435.60772,387.48492 H 270.12319 v 32.54952"
+         d="m 359.17066,387.48492 -89.04747,0 v 32.54952"
          id="path76"
          class="wire"
          sodipodi:nodetypes="ccc"
@@ -893,7 +878,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="rotate(90,569.23552,267.49609)">
       <text
          xml:space="preserve"
-         x="-400.77789"
+         x="-477.2157"
          y="681.2038"
          id="text61"
          class="label"
@@ -901,11 +886,11 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            sodipodi:role="line"
            id="tspan61"
            style="stroke-width:0.265"
-           x="-400.77789"
+           x="-477.2157"
            y="681.2038">branchZero</tspan></text>
       <path
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;marker-end:url(#Arrow)"
-         d="M 435.6977,378.10462 H 245.27748 v 162.19636 h 85.89839 v -34.41595"
+         d="m 358.9907,378.10462 -113.71322,0 v 162.19636 h 85.89839 v -34.41595"
          id="path78"
          class="wire"
          sodipodi:nodetypes="ccccc"
@@ -918,7 +903,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="rotate(90,569.23552,267.49609)">
       <text
          xml:space="preserve"
-         x="-400.77789"
+         x="-477.2157"
          y="685.89532"
          id="text62"
          class="label"
@@ -926,11 +911,11 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            sodipodi:role="line"
            id="tspan62"
            style="stroke-width:0.265"
-           x="-400.77789"
+           x="-477.2157"
            y="685.89532">branchNotZero</tspan></text>
       <path
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;marker-end:url(#Arrow)"
-         d="M 435.74269,382.73853 H 252.46707 v 151.64536 h 54.18 v -28.50925"
+         d="m 359.08099,382.73853 -106.61392,0 v 151.64536 h 54.18 v -28.50925"
          id="path77"
          class="wire"
          sodipodi:nodetypes="ccccc"
@@ -943,18 +928,18 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="translate(-260.21894)">
       <text
          xml:space="preserve"
-         x="696.17041"
+         x="619.7326"
          y="393.59717"
          id="text63"
          class="label"><tspan
            sodipodi:role="line"
            id="tspan63"
            style="stroke-width:0.265"
-           x="696.17041"
+           x="619.7326"
            y="393.59717">pcLoad</tspan></text>
       <path
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;marker-end:url(#Arrow)"
-         d="m 435.73796,392.32588 h -92.56104 v 33.62566"
+         d="m 359.03096,392.32588 -15.85404,0 v 33.62566"
          id="path75"
          class="wire"
          transform="translate(260.21894)"
@@ -1347,7 +1332,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          xml:space="preserve"><tspan
            x="85.136353"
            y="200.54567"
-           id="tspan10">Result</tspan></text>
+           id="tspan3">Result</tspan></text>
       <text
          class="label"
          x="815.47437"
@@ -1846,7 +1831,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          xml:space="preserve"><tspan
            x="85.060211"
            y="200.54567"
-           id="tspan11">IR</tspan></text>
+           id="tspan4">IR</tspan></text>
       <path
          style="display:inline;marker-end:url(#Arrow)"
          d="m 469.23989,434.07911 h 10.16762"
@@ -1879,11 +1864,11 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          xml:space="preserve"><tspan
            x="80.386772"
            y="200.54567"
-           id="tspan12">Instruction
+           id="tspan5">Instruction
 </tspan><tspan
            x="80.386772"
            y="206.2783"
-           id="tspan13">Decoder</tspan></text>
+           id="tspan6">Decoder</tspan></text>
     </g>
     <g
        id="opcodeWire"
@@ -2136,7 +2121,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        xml:space="preserve"><tspan
          x="81.286972"
          y="200.54567"
-         id="tspan14">Data Memory</tspan></text>
+         id="tspan7">Data Memory</tspan></text>
     <text
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;fill:#000000;fill-opacity:1;stroke-width:0.264583"
        class="label"
@@ -2177,12 +2162,12 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;white-space:pre;inline-size:11.5647;display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"><tspan
          x="-257.0502"
          y="191.6422"
-         id="tspan15">Read<tspan
+         id="tspan8">Read<tspan
    y="191.6422"
-   id="tspan16"> </tspan></tspan><tspan
+   id="tspan9"> </tspan></tspan><tspan
          x="-257.0502"
          y="197.37482"
-         id="tspan17">Data</tspan></text>
+         id="tspan10">Data</tspan></text>
     <text
        class="label-small"
        x="-298.47128"
@@ -2238,11 +2223,11 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        xml:space="preserve"><tspan
          x="95.26252"
          y="200.54567"
-         id="tspan19">Instr.
+         id="tspan11">Instr.
 </tspan><tspan
          x="95.26252"
          y="206.2783"
-         id="tspan21">Out</tspan></text>
+         id="tspan12">Out</tspan></text>
     <text
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;white-space:pre;inline-size:32.9187;display:inline;mix-blend-mode:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        class="label"
@@ -2253,7 +2238,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        xml:space="preserve"><tspan
          x="95.26252"
          y="200.54567"
-         id="tspan22">Addr.</tspan></text>
+         id="tspan13">Addr.</tspan></text>
     <text
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;white-space:pre;inline-size:27.6026;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        class="component-name"
@@ -2264,12 +2249,12 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        xml:space="preserve"><tspan
          x="85.060211"
          y="200.54567"
-         id="tspan23">Instruction<tspan
+         id="tspan14">Instruction<tspan
    y="200.54567"
-   id="tspan24"> </tspan></tspan><tspan
+   id="tspan15"> </tspan></tspan><tspan
          x="85.060211"
          y="206.2783"
-         id="tspan25">Memory</tspan></text>
+         id="tspan16">Memory</tspan></text>
     <path
        style="marker-end:url(#Arrow)"
        d="M 297.65811,82.068411 H 282.04677"
