@@ -34,15 +34,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.7351262"
-     inkscape:cx="935.21357"
-     inkscape:cy="346.87922"
+     inkscape:zoom="0.51981272"
+     inkscape:cx="976.31316"
+     inkscape:cy="357.82118"
      inkscape:window-width="1504"
      inkscape:window-height="932"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g39" />
+     inkscape:current-layer="layer1" />
   <defs
      id="defs1">
     <marker
@@ -1053,7 +1053,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-7-1-1"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="pcSrcMux1" />
       <path
          class="wire"
@@ -1061,7 +1061,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-3-6-9-3-5"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="pcSrcMux0" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-4)"
@@ -1278,7 +1278,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-7-1-1-8"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="jumpControlSrc0" />
       <path
          class="wire"
@@ -1286,7 +1286,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-3-6-9-3-5-6"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="jumpControlSrc1" />
       <path
          style="display:inline;marker-end:url(#Arrow-9-3)"
@@ -1435,7 +1435,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-7"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="aluSrc20" />
       <path
          class="wire"
@@ -1443,7 +1443,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-3-6-9"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="aluSrc21" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-9)"
@@ -1492,7 +1492,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-7-1"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="aluSrc10" />
       <path
          class="wire"
@@ -1500,7 +1500,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path1597-3-6-9-3"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="aluSrc11" />
       <path
          style="display:inline;marker-end:url(#Arrow)"
@@ -1706,28 +1706,28 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          sodipodi:nodetypes="cc"
          data-show-on-value="3"
-         style="stroke-linecap:round"
+         style="stroke-linecap:round;stroke:#55ff00;stroke-opacity:1"
          inkscape:label="writeDataMuxSrc3" />
       <path
          d="m 577.33008,468.69948 -7,-5"
          id="path3-2"
          class="wire"
          data-show-on-value="2"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="writeDataMuxSrc2" />
       <path
          d="m 577.33008,468.69948 -7,5"
          id="path3-2-3"
          class="wire"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="writeDataMuxSrc1" />
       <path
          d="m 577.33008,468.69948 -7,15"
          id="path3-2-3-6"
          class="wire"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          sodipodi:nodetypes="cc"
          inkscape:label="writeDataMuxSrc0" />
       <path

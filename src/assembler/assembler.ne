@@ -48,5 +48,12 @@ identifier -> %identifier {% ([id]) => ({type: "id", value: id.text}) %}
 number -> %number {% ([n]) => ({type: "num", value: BigInt(n.text)}) %}
 anything -> %anything {% ([a]) => ({type: "any", value: a.text}) %}
 
-directive -> %directive directiveArg:* {% ([d, ...args]) => ({type: "directive", directive: d.text, line: d.line, args: args[0]}) %}
+directive -> %directive directiveArg ("," directiveArg):* {% 
+  ([d, firstArg, ...restArgs]) => ({
+    type: "directive",
+    directive: d.text,
+    line: d.line,
+    args: [firstArg, ...restArgs.flat().map(([_, a]) => a)]
+  }) 
+%}
 directiveArg -> (indentifier | number | anything) {% ([[arg]]) => arg %}
