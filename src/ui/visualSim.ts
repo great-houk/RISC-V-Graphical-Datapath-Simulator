@@ -251,8 +251,15 @@ export class VisualSim {
 		instrMemTable.empty()
 		for (let [i, [instr, line]] of asmCode.entries()) {
 			let addr = textStart + BigInt(i * 4)
+			let label = ""
+			for (const l in assembled.labels) {
+				if (assembled.labels[l] === addr) {
+					label = l + ": "
+					break
+				}
+			}
 			instrMemTable.append(`
-                <tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${line}</td> </tr>
+                <tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${label}${line}</td> </tr>
             `)
 		}
 

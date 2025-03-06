@@ -3,7 +3,7 @@ import { Bit, Bits, b } from "utils/bits"
 import { registers, opcodes, textStart } from "simulator/constants";
 import grammar from './assembler.ne';
 
-interface Program { instructions: [number, bigint][], machineCode: bigint[] };
+interface Program { instructions: [number, bigint][], machineCode: bigint[], labels: Record<string, bigint> };
 
 // AST types that are returned from the parser.
 interface Arg { type: string, value: any }
@@ -281,7 +281,7 @@ export function assembleKeepLineInfo(program: string): Program {
 		}
 	}
 
-	return { instructions: instrMem, machineCode: machineCode };
+	return { instructions: instrMem, machineCode: machineCode, labels: labels };
 }
 
 /** Assembles a single instruction. */
