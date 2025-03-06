@@ -1,5 +1,8 @@
 import { Bit, Bits, b } from "utils/bits"
 
+/** The starting address of the text section. */
+export const textStart = 0x0001_0000n // typically this would be 0x0001_0000 but lets use zero for simplicity.
+
 /** Maps numbers to their register name. */
 export const registerNames = [
     "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",

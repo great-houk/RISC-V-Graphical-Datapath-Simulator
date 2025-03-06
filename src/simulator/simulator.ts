@@ -1,10 +1,9 @@
 import { Bit, Bits, b } from "utils/bits"
 import * as Comp from "./components"
+import { textStart } from "./constants";
 
 export class Simulator {
 	public code: bigint[] = []; // The code loaded in the simulator
-
-	public static readonly textStart = 0x0001_0000n // typically this would be 0x0001_0000 but lets use zero for simplicity.
 
 	// components
 	public wires: Comp.Wires;
@@ -49,7 +48,7 @@ export class Simulator {
 		this.registerFile = new Comp.RegisterFile(this.wires);
 		this.componentList.push(this.ram, this.pc, this.alu, this.registerFile);
 		// Set some values before the start, bc PC only gets set on the second cycle, so the instruction decoder can load from the wrong addr
-		this.pc.val = Bits(Simulator.textStart, 32);
+		this.pc.val = Bits(textStart, 32);
 		this.wires.pcVal = this.pc.val;
 		this.setRegisters({ 2: 0xBFFFFFF0n, 3: 0x10008000n }); // sp and gp
 
@@ -60,7 +59,7 @@ export class Simulator {
 	/** Initialize instruction memory */
 	setCode(code: bigint[]) {
 		this.code = [...code];
-		this.ram.data.storeArray(Simulator.textStart, 4, code);
+		this.ram.data.storeArray(textStart, 4, code);
 	}
 
 	/**

@@ -1,10 +1,9 @@
 import { Parser, Grammar } from 'nearley';
-import * as moo from 'moo';
 import { Bit, Bits, b } from "utils/bits"
-import { registers, opcodes } from "simulator/constants";
+import { registers, opcodes, textStart } from "simulator/constants";
 import grammar from './assembler.ne';
 
-interface Program { instructions: [number, bigint][], data: [number, bigint][], machineCode: bigint[] };
+interface Program { instructions: [number, bigint][], machineCode: bigint[] };
 
 // AST types that are returned from the parser.
 interface Arg { type: string, value: any }
@@ -38,14 +37,12 @@ interface SBType { type: "SB", line: number, op: string, rs1: string, rs2: strin
 interface UType { type: "U", line: number, op: string, rd: string, imm: number | string }
 interface UJype { type: "UJ", line: number, op: string, rd: string, imm: number | string }
 
-type Directive = SizedData | Align;
-interface SizedData { data: bigint[], align: number }
-interface Align { align: number }
+type Directive = SizedData;
+interface SizedData { data: bigint[], size: number }
 
 function directiveMatch(directive: AsmDirective): Directive {
 	const sizedData = new Map([[".byte", 1], [".half", 2], [".word", 4], [".dword", 8]]);
 	const string = [".string"];
-	const align = [".align"];
 	if (sizedData.has(directive.directive)) {
 		let data = [];
 		let size = sizedData.get(directive.directive) as number;
@@ -53,15 +50,12 @@ function directiveMatch(directive: AsmDirective): Directive {
 			if (arg.type == "num") {
 				let value = arg.value;
 				if (value > 2n ** (8n * BigInt(size))) throw Error("Value can't fit in " + size + " bytes");
-				for (let i = 0; i < size; i++) {
-					data.push(value & 0xFFn);
-					value >>= 8n;
-				}
+				data.push(value);
 			} else {
 				throw Error("Invalid argument for " + directive.directive);
 			}
 		}
-		return { data: data, align: size }
+		return { data: data, size: size }
 	} else if (string.includes(directive.directive)) {
 		if (directive.args.length == 1 && directive.args[0].type == "any") {
 			let s = directive.args[0].value.substring(1, directive.args[0].value.length - 1); // Remove quotes
@@ -70,13 +64,7 @@ function directiveMatch(directive: AsmDirective): Directive {
 				data.push(BigInt(char.charCodeAt(0)));
 			}
 			data.push(0n); // null terminator
-			return { data: data, align: 4 }
-		} else {
-			throw Error("Invalid argument for " + directive.directive);
-		}
-	} else if (align.includes(directive.directive)) {
-		if (directive.args.length == 1 && directive.args[0].type == "num") {
-			return { align: Number(directive.args[0].value) }
+			return { data: data, size: 1 }
 		} else {
 			throw Error("Invalid argument for " + directive.directive);
 		}
@@ -106,9 +94,14 @@ const instrRules: Rule[] = [
 		signature: ["id", "id", "id"],
 		conv: (op, [rd, rs1, rs2], line) => ({ type: "R", op: op, rd: rd, rs1: rs1, rs2: rs2, line: line }),
 	}, {
-		instructions: ["addi", "andi", "ori", "xori", "slti", "sltiu"],
+		instructions: ["addi"],
 		format: "basic",
 		signature: ["id", "id", "any"],
+		conv: (op, [rd, rs1, imm], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
+	}, {
+		instructions: ["andi", "ori", "xori", "slti", "sltiu"],
+		format: "basic",
+		signature: ["id", "id", "num"],
 		conv: (op, [rd, rs1, imm], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
 	}, {
 		instructions: ["slli", "srai", "srli"], // shifts are stored as a specialized I-format, 
@@ -120,6 +113,11 @@ const instrRules: Rule[] = [
 		format: "basic",
 		signature: ["id", "id", "id"],
 		conv: (op, [rs1, rs2, label], line) => ({ type: "SB", op: op, rs1: rs1, rs2: rs2, imm: label, line: line }),
+	}, {
+		instructions: ["jalr"],
+		format: "displacement",
+		signature: ["id", "num", "id"],
+		conv: (op, [rd, imm, rs1], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
 	}, {
 		instructions: ["jal"],
 		format: "basic",
@@ -141,14 +139,14 @@ const instrRules: Rule[] = [
 		signature: ["id", "any"],
 		conv: (op, [rd, imm], line) => ({ type: "U", op: op, rd: rd, imm: imm, line: line }),
 	}, {
-		instructions: ["lb", "lbu", "lh", "lhu", "lw", "jalr"],
+		instructions: ["lb", "lbu", "lh", "lhu", "lw"],
 		format: "displacement",
-		signature: ["id", "num", "id"],
+		signature: ["id", "any", "id"],
 		conv: (op, [rd, imm, rs1], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
 	}, {
 		instructions: ["sb", "sh", "sw"],
 		format: "displacement",
-		signature: ["id", "num", "id"],
+		signature: ["id", "any", "id"],
 		conv: (op, [rs2, imm, rs1], line) => ({ type: "S", op: op, rs1: rs1, rs2: rs2, imm: imm, line: line }),
 	}, {
 		instructions: ["mv"],
@@ -206,25 +204,28 @@ function parse(program: string): AsmStatement[] {
 export function assembleKeepLineInfo(program: string): Program {
 	let parsed = parse(program)
 
-	let labels: Record<string, number> = {}
+	let labels: Record<string, bigint> = {}
 	let instructions: Instr[] = [];
 	let directives: [Directive, number][] = [];
 	let instrMem: [number, bigint][] = [];
-	let dataMem: [number, bigint][] = [];
 	let machineCode: bigint[] = [];
 
 	// Pass 1, read labels, convert AST into Instruction types
+	let addr = textStart;
 	for (let instr of parsed) {
 		if (instr.type == "label") {
-			labels[instr.label] = instructions.length // Point to next instruction
+			labels[instr.label] = addr;
 		} else if (instr.type == "directive") {
 			let directive = directiveMatch(instr);
 			directives.push([directive, instr.line]);
+			addr += BigInt(directive.data.length) * BigInt(directive.size);
+			addr += addr % 4n == 0n ? 0n : (4n - addr % 4n); // Align to 4 bytes
 		} else {
 			let matchingRule = instrRules.find(r => ruleMatch(r, instr as AsmInstr))
 			if (matchingRule) {
 				let newInstr = matchingRule.conv(instr.op.toLowerCase(), instr.args.map((a) => a.value), instr.line)
 				instructions.push(newInstr)
+				addr += 4n;
 			} else {
 				throw new AssemblerError("Unknown instruction or incorrect args", program, instr.line)
 			}
@@ -234,14 +235,12 @@ export function assembleKeepLineInfo(program: string): Program {
 	// Pass 2, actually assemble the assembly
 	let i = 0;
 	let d = 0;
-	let offset = 0;
-	let align = 0;
 	while (i < instructions.length || d < directives.length) {
 		// Insert an instruction next
 		if (d >= directives.length || (i < instructions.length && instructions[i].line < directives[d][1])) {
 			let instr = instructions[i];
 			try {
-				var machineCodeInstr = assembleInstr(machineCode.length, instr, labels)
+				var machineCodeInstr = assembleInstr(BigInt(machineCode.length) * 4n + textStart, instr, labels)
 			} catch (e: any) {
 				throw new AssemblerError(e.message, program, instr.line)
 			}
@@ -252,47 +251,75 @@ export function assembleKeepLineInfo(program: string): Program {
 		// Insert a directive next
 		else {
 			let [directive, _] = directives[d];
-			let a;
-			if (align != 0)
-				a = align;
-			else
-				a = directive.align;
 
-			// Data directive (byte, word, string, etc...)
-			if ("data" in directive) {
-				offset += (a - (offset % a)) % a;
-				offset %= 4;
-
-				for (let data of directive.data) {
-					if (offset == 0) {
-						machineCode.push(0n);
-						dataMem.push([machineCode.length - 1, 0n]);
+			let count = 0;
+			let size = directive.size;
+			for (let data of directive.data) {
+				if (size == 1) {
+					count %= 4;
+					if (count == 0) {
+						machineCode.push(data);
+					} else {
+						machineCode[machineCode.length - 1] += data << BigInt(count * 8);
 					}
-
-					machineCode[machineCode.length - 1] |= data << (BigInt(offset) * 8n);
-					dataMem[dataMem.length - 1][1] |= data << (BigInt(offset) * 8n);
-					offset += 1;
-					offset %= 4;
+				} else if (size == 2) {
+					count %= 2;
+					if (count == 0) {
+						machineCode.push(data);
+					} else {
+						machineCode[machineCode.length - 1] += data << BigInt(count * 16);
+					}
+				} else if (size == 4) {
+					machineCode.push(data);
+				} else if (size == 8) {
+					machineCode.push(data & 0xFFFFFFFFn);
+					machineCode.push(data >> 32n);
 				}
-			}
-			// Alignment directive
-			else {
-				align = directive.align;
+				count++;
 			}
 			d++;
 		}
 	}
 
-	return { instructions: instrMem, data: dataMem, machineCode: machineCode };
+	return { instructions: instrMem, machineCode: machineCode };
 }
 
 /** Assembles a single instruction. */
-function assembleInstr(instrNum: number, instr: Instr, labels: Record<string, number>): Bits {
+function assembleInstr(addr: bigint, instr: Instr, labels: Record<string, bigint>): Bits {
 	let temp: any = { ...instr } // Copy instr into an any so we can store Bits and BigInts in it.
+	// Parse labels
 	if ("imm" in instr && typeof instr.imm == "string") {
-		if (!(instr.imm in labels)) throw Error(`Unknown label "${temp.imm}"`)
-		temp.imm = (labels[instr.imm] - instrNum) * 4;
+		let label = instr.imm;
+		let bits = "normal";
+		// Check for %hi and %lo
+		if (label.startsWith("%hi(")) {
+			label = label.substring(4, label.length - 1);
+			bits = "high";
+		} else if (label.startsWith("%lo(")) {
+			label = label.substring(4, label.length - 1);
+			bits = "low";
+		}
+		// Check if it exists
+		if (!(label in labels)) throw Error(`Unknown label "${label}"`)
+		// Calculate the value
+		const jumps = ["UJ", "SB"];
+		if (jumps.includes(instr.type)) {
+			temp.imm = labels[label] - addr;
+		} else {
+			temp.imm = labels[label];
+			// Auto apply low, since we're limited to 12 bits
+			if (bits == "normal") {
+				bits = "low";
+			}
+		}
+		// Mask and shift based on high/low
+		if (bits == "high") {
+			temp.imm = (temp.imm >> 12n) & 0xFFFFFn;
+		} else if (bits == "low") {
+			temp.imm = temp.imm & 0xFFFn;
+		}
 	}
+	// Parse registers
 	for (let field of ["rd", "rs1", "rs2"]) {
 		if (field in temp) {
 			if (!(temp[field] in registers))

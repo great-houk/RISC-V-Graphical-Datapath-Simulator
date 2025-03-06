@@ -1,5 +1,5 @@
 import { Simulator } from "simulator/simulator";
-import { registerNames } from "simulator/constants"
+import { registerNames, textStart } from "simulator/constants"
 import { assembleKeepLineInfo } from "assembler/assembler"
 import { Radix, parseInt, intToStr } from "utils/radix"
 
@@ -282,7 +282,7 @@ export class VisualSim {
 		let instrMemTable = $(this.instrMemPanel).find(".view tbody")
 		instrMemTable.empty()
 		for (let [i, [instr, line]] of asmCode.entries()) {
-			let addr = Simulator.textStart + BigInt(i * 4)
+			let addr = textStart + BigInt(i * 4)
 			instrMemTable.append(`
                 <tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${line}</td> </tr>
             `)
@@ -358,7 +358,7 @@ export class VisualSim {
 			// Update Instruction Memory and microarch
 			$(this.instrMemPanel).find(".current-instruction").removeClass("current-instruction")
 			if (this.state != "done") { // don't show current instruction if we are done.
-				let line = Number((Bits.toInt(this.sim.wires.pcVal) - Simulator.textStart) / 4n)
+				let line = Number((Bits.toInt(this.sim.wires.pcVal) - textStart) / 4n)
 				let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
 				if (currentInstr) {
 					currentInstr.classList.add("current-instruction")

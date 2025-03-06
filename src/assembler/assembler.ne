@@ -7,7 +7,7 @@ const lexer = moo.compile({
     newline: {match: '\n', lineBreaks: true},
     comment: {match: /#.*?$/, value: x => undefined},
     number:  /0[bB][01]+|0[xX][0-9a-fA-F]+|[+-]?[0-9]+/,
-    identifier: /[a-zA-Z_][a-zA-Z_0-9]*/,
+    identifier: /[a-zA-Z_][a-zA-Z_0-9]*|%..\([a-zA-Z_][a-zA-Z_0-9]*\)/,
     directive: /\.[a-zA-Z_0-9]+/,
     symbol: [",", "(", ")", ":"],
     anything: /[^\n]+/,
