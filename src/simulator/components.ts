@@ -374,7 +374,6 @@ export class ControlFSM implements Component {
 
 export class InstructionRegister implements Component {
 	public instruction: Bits = Bits(0x0000_0013n, 32);
-	public instr_delayed: Bits = Bits(0x0, 32);
 	private wires: Wires;
 
 	private static immediate_table = new TruthTable<(i: Bits) => Bits>([
@@ -427,7 +426,6 @@ export class InstructionRegister implements Component {
 	}
 
 	falling_edge() {
-		this.instr_delayed = this.instruction;
 	}
 
 	reset_outputs() {
@@ -535,13 +533,9 @@ export class JumpControl implements Component {
 export class ALU implements Component {
 	public output: Bits = Bits(0n, 32, true);
 	public in1 = Bits(0n, 32);
-	public in1_delayed = Bits(0n, 32);
 	public in2 = Bits(0n, 32);
-	public in2_delayed = Bits(0n, 32);
 	public op: ALUOp = 0;
-	public op_delayed: ALUOp = 0;
 	public alt: Bit = 0;
-	public alt_delayed: Bit = 0;
 	private wires: Wires;
 
 
@@ -581,10 +575,6 @@ export class ALU implements Component {
 	falling_edge() {
 		this.wires.aluOut = this.output;
 		this.wires.aluZero = this.output.every(b => b == 0);
-		this.in1_delayed = this.in1;
-		this.in2_delayed = this.in2;
-		this.op_delayed = this.op;
-		this.alt_delayed = this.alt;
 	}
 
 	reset_outputs() {

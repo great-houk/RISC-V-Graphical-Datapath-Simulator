@@ -41,7 +41,7 @@ export class VisualSim {
 	private dataMemPanel: HTMLElement
 	private regFilePanel: HTMLElement
 	private instrMemEditor: CodeMirror
-	private dataMemEditor: CodeMirror
+	// private dataMemEditor: CodeMirror
 
 	private state: State = "unstarted"
 	private playing: number = 0; // Timer handle to the play loop, or 0 if not playing.
@@ -63,19 +63,6 @@ export class VisualSim {
 			mode: "riscv",
 			lineNumbers: true,
 		});
-
-		// Set up the Data Memory Tab
-		this.dataMemEditor = CodeMirror.fromTextArea($(this.dataMemPanel).find<HTMLTextAreaElement>(".editor textarea")[0], {
-			lineNumbers: true, // we'll set lineNumberFormatter in updateSimulation
-		});
-
-		// set up the Register File tab
-		for (let [i, name] of registerNames.entries()) {
-			$(this.regFilePanel).find(".editor tbody").append(`
-                <tr> <td>${name} (x${i})</td> <td><input type="text"></td> </tr>
-            `)
-		}
-		$(this.regFilePanel).find(".editor input").eq(0).prop("disabled", true) // disable x0
 
 		// Setup examples dropdown
 		this.examples.forEach((example) => $("#examples .dropdown-menu").append(
@@ -110,14 +97,20 @@ export class VisualSim {
 	}
 
 	private setupEvents() {
-		$("#editor-tabs").on("shown.bs.tab", (event) => {
+		$("#editor-tabs").on("click", (event) => {
+			// We have to refresh the CodeMirror after it is shown
 			let tab = $($(event.target).data("bs-target")).find(".CodeMirror")[0] as any
-			if (tab) tab.CodeMirror.refresh() // We have to refresh the CodeMirror after it is shown
+			if (tab) tab.CodeMirror.refresh()
+
+			// Update the reg mem tabs
+			if (this.state != "unstarted" && $(event.target).is("#instrMem-tab")) {
+				$("#reg-mem-tabs").show()
+			} else {
+				$("#reg-mem-tabs").hide()
+			}
 		})
 
 		// reformat number on input
-		$(this.regFilePanel).on("change", "input", (event) => this.updateEditorsAndViews())
-
 		$("#dataMem-radix, #dataMem-word-size, #regFile-radix").on("change", (event) => this.updateEditorsAndViews())
 
 		$("#examples").on("click", ".dropdown-item", (event) => {
@@ -250,36 +243,11 @@ export class VisualSim {
 		let asmCode: [bigint, string][] = assembled.instructions.map(([line, instr]) => [instr, lines[line - 1].trim()])
 		let machineCode = assembled.machineCode;
 
-		let memRadix = this.dataMemRadix()
-		let memWordSize = this.dataMemWordSize()
-		let memStr = this.dataMemEditor.getValue().trim()
-		try {
-			// split("") equals [""] for some reason
-			var mem = memStr.split("\n").filter(s => s).map(s => parseInt(s, memRadix, memWordSize));
-		} catch (e: any) {
-			this.error(`Couldn't parse data memory:\n${e.message}`)
-			return false
-		}
-
-		let regRadix = this.regFileRadix()
-		let regStrs = $(this.regFilePanel).find(".editor input").get().map(elem => $(elem).val() as string)
-		try {
-			var regs: Record<number, bigint> = {}
-			for (let [i, s] of regStrs.entries()) {
-				if (s) regs[i] = parseInt(s, regRadix, 32)
-			}
-		} catch (e: any) {
-			this.error(`Couldn't parse registers:\n${e.message}`)
-			return false
-		}
-
 		// We've got all the data so we can start the simulator
 		this.sim.setCode(machineCode)
-		this.sim.setRegisters(regs)
-		this.sim.ram.data.storeArray(0n, memWordSize / 8, mem);
 
 		// setup Instruction Memory view
-		let instrMemTable = $(this.instrMemPanel).find(".view tbody")
+		let instrMemTable = $(this.instrMemPanel).find("#instrMem-table")
 		instrMemTable.empty()
 		for (let [i, [instr, line]] of asmCode.entries()) {
 			let addr = textStart + BigInt(i * 4)
@@ -288,10 +256,9 @@ export class VisualSim {
             `)
 		}
 
-		// Data Memory view is recreated every tick.
-
-		// set up Register File view if needed
-		let regFileTable = $(this.regFilePanel).find(".view tbody")
+		// Set up reg file and data mem view
+		$("#reg-mem-tabs").show()
+		let regFileTable = $(this.regFilePanel).find("tbody")
 		if (regFileTable.children().length == 0) {
 			for (let [i, name] of registerNames.entries()) {
 				regFileTable.append(`
@@ -306,7 +273,7 @@ export class VisualSim {
 
 		// Switch to views
 		$(this.editors).find(".editor").hide()
-		$(this.editors).find(".view").show()
+		$(this.editors).find(".view").css("display", "flex")
 
 		this.state = "running"
 		return true
@@ -337,9 +304,6 @@ export class VisualSim {
 		let regRadix = this.regFileRadix()
 
 		if (this.state == "unstarted") {
-			// renumber instruction input to match radix
-			this.dataMemEditor.setOption("lineNumberFormatter", (l) => hexLine(l, memWordSize / 8))
-
 			// update Register File input placeholders and values to match radix
 			let registerTds = $(this.regFilePanel).find(".editor input").get()
 			for (let [i, reg] of this.sim.registerFile.registers.entries()) {
@@ -362,7 +326,7 @@ export class VisualSim {
 				let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
 				if (currentInstr) {
 					currentInstr.classList.add("current-instruction")
-					currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
+					// currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })
 					// Set the current instruction in the microarch
 					let text = `${$(currentInstr).find("td").eq(0).text()}: ${$(currentInstr).find("td").eq(2).text()}`
 					// Limit text length to 34 characters
@@ -372,7 +336,7 @@ export class VisualSim {
 			}
 
 			// Update Data Memory
-			$(this.dataMemPanel).find(".view tbody").empty()
+			$(this.dataMemPanel).find("tbody").empty()
 			for (let [addr, val] of this.sim.ram.data.dump(memWordSize / 8)) {
 				let elem: string
 				if (typeof addr == "bigint") {
@@ -380,11 +344,11 @@ export class VisualSim {
 				} else {
 					elem = `<tr><td colspan="2">...</td></tr>`
 				}
-				$(this.dataMemPanel).find(".view tbody").append(elem)
+				$(this.dataMemPanel).find("tbody").append(elem)
 			}
 
 			// update Register File
-			let registerTds = $(this.regFilePanel).find(".view .register-value").get()
+			let registerTds = $(this.regFilePanel).find(".register-value").get()
 			for (let [i, reg] of this.sim.registerFile.registers.entries()) {
 				$(registerTds[i]).text(`${intToStr(reg, regRadix)}`)
 			}
@@ -535,11 +499,13 @@ export class VisualSim {
 		this.state = "unstarted"
 		if (this.playing) this.pause(); // clear interval
 
+		// Hide reg/mem tabs
+		$("#reg-mem-tabs").hide()
+
 		// Switch back to editors
 		$(this.editors).find(".view").hide()
 		$(this.editors).find(".editor").show()
 		this.instrMemEditor.refresh()
-		this.dataMemEditor.refresh()
 
 		this.update()
 	}
@@ -549,16 +515,10 @@ export class VisualSim {
 		this.restart()
 
 		this.instrMemEditor.setValue(example?.code ?? "")
-		this.dataMemEditor.setValue(example?.memory ?? "")
 
 		$("#dataMem-radix").val(example?.dataMemRadix ?? "hex")
 		$("#dataMem-word-size").val(example?.dataMemWordSize ?? 32)
 		$("#regFile-radix").val(example?.regFileRadix ?? "hex")
-
-		let registerInputs = $(this.regFilePanel).find(".editor input")
-		registerInputs.each((i, input) => {
-			$(input).val(example?.registers?.[i] ?? "")
-		})
 
 		this.update()
 	}

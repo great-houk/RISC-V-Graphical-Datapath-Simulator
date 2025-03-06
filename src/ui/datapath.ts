@@ -242,18 +242,18 @@ export const datapathElements: Record<string, DataPathElem> = {
 	},
 	"ir": {
 		description: "The instruction register stores the current instruction.",
-		tooltip: (sim) => `Current Instruction: ${intToStr(sim.instructionMemory.instr_delayed, "hex")}`,
+		tooltip: (sim) => `Current Instruction: ${intToStr(sim.instructionMemory.instruction, "hex")}`,
 	},
 	"in1FF": {
-		tooltip: (sim) => `ALU Input 1: ${intToStr(sim.alu.in1_delayed, "hex")}`,
+		tooltip: (sim) => `ALU Input 1: ${intToStr(sim.alu.in1, "hex")}`,
 	},
 	"in2FF": {
-		tooltip: (sim) => `ALU Input 2: ${intToStr(sim.alu.in2_delayed, "hex")}`,
+		tooltip: (sim) => `ALU Input 2: ${intToStr(sim.alu.in2, "hex")}`,
 	},
 	"alu": {
 		description: "The Arithmetic Logic Unit performs the cpu's arithmetic operations",
-		tooltip: (sim) => `${aluSummaries.match(sim.alu.op_delayed, sim.alu.alt_delayed)(sim.alu.in1_delayed, sim.alu.in2_delayed)
-			} = ${intToStr(sim.wires.aluOut, "hex")}<br/>Zero: ${sim.wires.aluZero}`,
+		tooltip: (sim) => `${aluSummaries.match(sim.alu.op, sim.alu.alt)(sim.alu.in1, sim.alu.in2)
+			} = ${intToStr(sim.alu.output, "hex")}<br/>Zero: ${sim.wires.aluZero}`,
 	},
 	"dataMem": {
 		description: "Stores the data the program is working with.",
