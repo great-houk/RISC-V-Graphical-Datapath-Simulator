@@ -18,6 +18,8 @@ import { Bits } from "utils/bits";
 
 type CodeMirror = CodeMirror.Editor
 
+const osCode: string = require("assets/os.s")
+
 /** Converts a line number into a hex address. */
 export function hexLine(num: number, inc: number, start: bigint = 0n): string {
 	let numB = start + BigInt((num - 1) * inc)
@@ -44,7 +46,8 @@ export class VisualSim {
 	// private dataMemEditor: CodeMirror
 
 	private state: State = "unstarted"
-	private playing: number = 0; // Timer handle to the play loop, or 0 if not playing.
+	private playing: number = 0 // Timer handle to the play loop, or 0 if not playing.
+	private dirLabels: [bigint, string][] = []
 
 	constructor() {
 		this.sim = new Simulator()
@@ -63,13 +66,14 @@ export class VisualSim {
 			mode: "riscv",
 			lineNumbers: true,
 		});
+		$(this.editors).find(".view").hide()
 
 		// Setup examples dropdown
 		this.examples.forEach((example) => $("#examples .dropdown-menu").append(
 			$(`<li>
-                <a class="dropdown-item" href="#" data-example-name="${example.name}"
-                   data-bs-toggle="tooltip" title="${example.description}">${example.name}</a>
-               </li>`)
+				<a class="dropdown-item" href="#" data-example-name="${example.name}"
+				   data-bs-toggle="tooltip" title="${example.description}">${example.name}</a>
+			   </li>`)
 		))
 
 		this.setupEvents()
@@ -151,10 +155,10 @@ export class VisualSim {
 			return width
 		}))
 		let hoverRules = [...strokeWidths].map(width => `
-            .wires:hover .wire[data-stroke-width="${width}"], .wire[data-stroke-width="${width}"]:hover {
-                stroke-width: calc(${width} * 1.5) !important
-            }
-        `)
+			.wires:hover .wire[data-stroke-width="${width}"], .wire[data-stroke-width="${width}"]:hover {
+				stroke-width: calc(${width} * 1.5) !important
+			}
+		`)
 
 		let markerPos = ["start", "mid", "end"]
 		let markers = new Set(wires.flatMap(wire => markerPos.map(pos => {
@@ -167,10 +171,10 @@ export class VisualSim {
 			return ""
 		}).filter(marker => marker)))
 		let markerRules = [...markers].flatMap(marker => markerPos.map(pos => `
-            .powered.wire[data-marker-${pos}="${marker}"] {
-                marker-${pos}: url("#${marker}-powered") !important
-            }
-        `))
+			.powered.wire[data-marker-${pos}="${marker}"] {
+				marker-${pos}: url("#${marker}-powered") !important
+			}
+		`))
 
 		// Create "powered" versions of markers used on paths so that we can make the markers change color with the wire
 		markers.forEach(markerId => $(`#${markerId}`).clone()
@@ -224,8 +228,8 @@ export class VisualSim {
 	 * Load code/memory/registers and start the simulation, updates state
 	 * Returns true if started successfully, false otherwise.
 	 */
-	private start() {
-		// Get memory, instructions, registers
+	private start(loadOS = false) {
+		// Get code
 		let code = this.instrMemEditor.getValue()
 		try {
 			var assembled = assembleKeepLineInfo(code)
@@ -243,8 +247,14 @@ export class VisualSim {
 		let asmCode: [bigint, string][] = assembled.instructions.map(([line, instr]) => [instr, lines[line - 1].trim()])
 		let machineCode = assembled.machineCode;
 
-		// We've got all the data so we can start the simulator
+		// Load code/data
 		this.sim.setCode(machineCode)
+
+		// Load OS
+		if (loadOS) {
+			let os = assembleKeepLineInfo(osCode)
+			this.sim.setOS(os.machineCode)
+		}
 
 		// setup Instruction Memory view
 		let instrMemTable = $(this.instrMemPanel).find("#instrMem-table")
@@ -254,33 +264,44 @@ export class VisualSim {
 			let label = ""
 			for (const l in assembled.labels) {
 				if (assembled.labels[l] === addr) {
-					label = l + ": "
+					label = "<b>" + l + ": </b>"
 					break
 				}
 			}
 			instrMemTable.append(`
-                <tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${label}${line}</td> </tr>
-            `)
+				<tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(instr, "hex")}</td> <td>${label}${line}</td> </tr>
+			`)
 		}
 
-		// Set up reg file and data mem view
+		// Set up reg file view
 		$("#reg-mem-tabs").show()
 		let regFileTable = $(this.regFilePanel).find("tbody")
 		if (regFileTable.children().length == 0) {
 			for (let [i, name] of registerNames.entries()) {
 				regFileTable.append(`
-                    <tr> <td>${name} (x${i})</td> <td class="register-value"></td> </tr>
-                `)
+					<tr> <td>${name} (x${i})</td> <td class="register-value"></td> </tr>
+				`)
 			}
 
 			regFileTable.append(`
-            <tr> <td>PC</td> <td class="register-value"></td> </tr>
-        `)
+			<tr> <td>PC</td> <td class="register-value"></td> </tr>
+		`)
 		}
+
+		// Generate dirLabels for mem view
+		this.dirLabels = []
+		for (const [label, addr] of Object.entries(assembled.labels)) {
+			if (assembled.directives.find(([_, dir_addr]) => addr == dir_addr)) {
+				this.dirLabels.push([addr, label])
+			}
+		}
+
+		// Hide examples tab
+		$("#examples").hide()
 
 		// Switch to views
 		$(this.editors).find(".editor").hide()
-		$(this.editors).find(".view").css("display", "flex")
+		$(this.editors).find(".view").show()
 
 		this.state = "running"
 		return true
@@ -347,6 +368,10 @@ export class VisualSim {
 			for (let [addr, val] of this.sim.ram.data.dump(memWordSize / 8)) {
 				let elem: string
 				if (typeof addr == "bigint") {
+					let label = this.dirLabels.find(([a, _]) => a == addr)?.[1];
+					if (label) {
+						$(this.dataMemPanel).find("tbody").append(`<tr><td colspan="2"><b>${label}:</b></td></tr>`)
+					}
 					elem = `<tr> <td>${intToStr(addr, "hex")}</td> <td>${intToStr(val, memRadix, memWordSize)}</td> </tr>`
 				} else {
 					elem = `<tr><td colspan="2">...</td></tr>`
@@ -508,6 +533,9 @@ export class VisualSim {
 
 		// Hide reg/mem tabs
 		$("#reg-mem-tabs").hide()
+
+		// Show examples tab
+		$("#examples").show()
 
 		// Switch back to editors
 		$(this.editors).find(".view").hide()

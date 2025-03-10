@@ -92,6 +92,8 @@ CodeMirror.defineMode("riscv", function (config, parserConfig) {
 		"snez",
 		"sw",
 		"tail",
+		"halt",
+		"nop",
 		/* nonstandard pseudoinstructions */
 		"seq",
 		"sge",
@@ -111,9 +113,12 @@ CodeMirror.defineMode("riscv", function (config, parserConfig) {
 	], "");
 
 	var keywords = regexFromWords([
-		".data", ".text", ".globl", ".float", ".double",
-		".asciiz", ".word", ".byte"
+		".data", ".text"
 	], "i");
+
+	var directives = regexFromWords([
+		"%hi", "%lo", ".word", ".byte", ".half", ".dword", ".string"
+	], "");
 
 	function normal(stream, state) {
 		var ch = stream.next();
@@ -128,12 +133,12 @@ CodeMirror.defineMode("riscv", function (config, parserConfig) {
 			return state.cur(stream, state);
 		}
 
-		if (/\d/.test(ch)) {
+		if (/[-\d]/.test(ch)) {
 			stream.eatWhile(/[\w.%]/);
 			return "number";
 		}
 
-		if (/[.\w_]/.test(ch)) {
+		if (/[.\w_%]/.test(ch)) {
 			stream.eatWhile(/[\w\\\-_.]/);
 			return "variable";
 		}
@@ -166,6 +171,7 @@ CodeMirror.defineMode("riscv", function (config, parserConfig) {
 				if (keywords.test(word)) style = "keyword";
 				else if (instructions.test(word)) style = "builtin";
 				else if (registers.test(word)) style = "variable-2";
+				else if (directives.test(word)) style = "variable-3";
 			}
 			return style;
 		}

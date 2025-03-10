@@ -1,30 +1,33 @@
 /** ==== Editors and Positioning ==== */
 
-#editors > .tab-pane {
-    height: 100%;
+#editors>.tab-pane {
+	height: 100%;
 }
 
 /** Can't `display: flex` on the table panel as it is `display: none` by bootstrap. */
-#editors > .tab-pane > div {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+#editors>.tab-pane>div {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
-#editors .editor, #editors .view {
-    height: 100%;
-    /* There is a bug in Firefox (see https://bugzilla.mozilla.org/show_bug.cgi?id=764076) where the scrollbar isn't accounted for,
+#editors .editor,
+#editors .view {
+	height: 100%;
+	/* There is a bug in Firefox (see https://bugzilla.mozilla.org/show_bug.cgi?id=764076) where the scrollbar isn't accounted for,
        causing a x scrollbar to show even though it should be expanding to fit. A workaround is "overflow-y: scroll" but then the
        scrollbar always shows. */
-    overflow: auto;
+	overflow: auto;
 }
 
 #editors .form-select {
-    margin: 0.25rem;
+	margin: 0.25rem;
 }
 
-.nav-link, .nav-link:hover {
-    color: inherit; /* Don't color the nav links as links */
+.nav-link,
+.nav-link:hover {
+	color: inherit;
+	/* Don't color the nav links as links */
 }
 
 /*
@@ -49,40 +52,44 @@
 /* ==== Controls Styling ==== */
 
 #controls button {
-    transition: transform 50ms;
-    margin-right: 2px;
-    margin-left: 2px;
+	transition: transform 50ms;
+	margin-right: 2px;
+	margin-left: 2px;
 }
 
 #controls button:hover {
-    transform: scale(1.25);
+	transform: scale(1.25);
 }
 
 #controls button:active {
-    transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 #controls button:focus {
-    box-shadow: none; /* After click it was showing outline until you clicked somewhere else. */
+	box-shadow: none;
+	/* After click it was showing outline until you clicked somewhere else. */
 }
 
 #controls input[type="range"] {
-    height: 100%;
-    padding: 0 5%; /* Some left/right padding */
+	height: 100%;
+	padding: 0 5%;
+	/* Some left/right padding */
 }
 
 #controls input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.25);
+	transform: scale(1.25);
 }
+
 #controls input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.25);
+	transform: scale(1.25);
 }
 
 #controls input[type="range"]::-webkit-slider-thumb:active {
-    transform: scale(1.1);
+	transform: scale(1.1);
 }
+
 #controls input[type="range"]::-moz-range-thumb:active {
-    transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 
@@ -90,11 +97,11 @@
 /** Misc **/
 
 p {
-    text-indent: 2em;
+	text-indent: 2em;
 }
 
 .fas {
-    font-size: 150%
+	font-size: 150%
 }
 
 
@@ -113,43 +120,44 @@ table.table-fit tbody td, table.table-fit tfoot td {
 } */
 
 .address-table {
-    font-family: monospace;
-    font-size: 110%;
-    padding: 0;
-    margin: 0;
+	font-family: monospace;
+	font-size: 110%;
+	padding: 0;
+	margin: 0;
 }
 
 .address-table td {
-    padding: 5px; 
-    margin: 0;
+	padding: 5px;
+	margin: 0;
 }
 
 /** But an input in a table cell. */
 .address-table input {
-    border:none;
-    outline: none;
-    background-color: transparent;
-    margin: 0;
-    padding: 0;
+	border: none;
+	outline: none;
+	background-color: transparent;
+	margin: 0;
+	padding: 0;
 }
 
 .address-table td:focus-within {
-    outline: inset 2px #86b7fe;
-    outline-offset: -2px;
+	outline: inset 2px #86b7fe;
+	outline-offset: -2px;
 }
 
 .address-table td:nth-child(1) {
-    text-align: right;
-    white-space: nowrap;
-    width: 1px; /* Force to minimum that doesn't wrap */
+	text-align: right;
+	white-space: nowrap;
+	width: 1px;
+	/* Force to minimum that doesn't wrap */
 }
 
 .address-table td:nth-child(1)[colspan] {
-    text-align: center;
+	text-align: center;
 }
 
 .current-instruction {
-    background-color: yellow
+	background-color: yellow
 }
 
 
@@ -158,25 +166,26 @@ table.table-fit tbody td, table.table-fit tfoot td {
 /** ==== SVG Styling ==== */
 
 #datapath svg {
-    width: 100%;
-    height: 100%;
+	width: 100%;
+	height: 100%;
 }
 
 /* Fix weird bug where adding a tooltip would make an svg element "selectable" and show a border on click.
    The bug only seems to occur on Chrome for me. See https://github.com/atomiks/tippyjs/issues/121 */
 #datapath *:focus {
-    outline: none;
+	outline: none;
 }
 
 /** Highlight powered wires. */
 #datapath .powered.wire {
-    stroke: blue !important; /* I'm abusing !important, but it lets us override inline styles and inkscapes's svg will
+	stroke: blue !important;
+	/* I'm abusing !important, but it lets us override inline styles and inkscapes's svg will
                                   usually have lots of inline styles. */
 }
 
 #datapath marker.powered * {
-    stroke: blue !important;
-    fill: blue !important;
+	stroke: blue !important;
+	fill: blue !important;
 }
 
 /** Styles for wire hover and fixing powered wire markers will be generated dynamically in JS since we can't make CSS
@@ -188,27 +197,28 @@ table.table-fit tbody td, table.table-fit tfoot td {
 /* ==== Library styling ==== */
 
 .CodeMirror {
-    height: 100%;
-    width: 100%;
+	height: 100%;
+	width: 100%;
 }
 
 .CodeMirror pre.CodeMirror-placeholder {
-    color: #999;
+	color: #999;
 }
 
-#toast-container > div {
-    opacity: 90%;
+#toast-container>div {
+	opacity: 90%;
 }
 
-#toast-container > .toast {
-    width: 350px; /* Make toast a little wider (default is 300px) */
+#toast-container>.toast {
+	width: 350px;
+	/* Make toast a little wider (default is 300px) */
 }
 
 .tippy-box {
-    text-align: center;
-    opacity: 95%;
+	text-align: center;
+	opacity: 95%;
 }
 
 .tippy-box hr {
-    margin: 5px 0px;
+	margin: 5px 0px;
 }

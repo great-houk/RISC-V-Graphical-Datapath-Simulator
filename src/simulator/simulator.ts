@@ -62,6 +62,11 @@ export class Simulator {
 		this.ram.data.storeArray(textStart, 4, code);
 	}
 
+	/** Initialize the OS */
+	setOS(os: bigint[]) {
+		this.ram.data.storeArray(0x00000000n, 4, os);
+	}
+
 	/**
 	 * Sets the registers. Takes a map of register number to register value.
 	 * Register values should be positive.
