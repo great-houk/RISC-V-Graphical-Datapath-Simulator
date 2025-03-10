@@ -48,6 +48,7 @@ export class VisualSim {
 	private state: State = "unstarted"
 	private playing: number = 0 // Timer handle to the play loop, or 0 if not playing.
 	private dirLabels: [bigint, string][] = []
+	private instrAddrs: bigint[] = []
 
 	constructor() {
 		this.sim = new Simulator()
@@ -115,7 +116,7 @@ export class VisualSim {
 		})
 
 		// reformat number on input
-		$("#dataMem-radix, #dataMem-word-size, #regFile-radix").on("change", (event) => this.updateEditorsAndViews())
+		$("#dataMem-radix, #dataMem-word-size, #regFile-radix, #showInstructions").on("change", (event) => this.updateEditorsAndViews())
 
 		$("#examples").on("click", ".dropdown-item", (event) => {
 			this.loadExample(event.target.dataset.exampleName)
@@ -244,7 +245,11 @@ export class VisualSim {
 		}
 
 		let lines = code.split("\n")
-		let asmCode: [bigint, string][] = assembled.instructions.map(([line, instr]) => [instr, lines[line - 1].trim()])
+		let asmCode: [bigint, string][] = assembled.instructions.map(([line, addr]) => {
+			let instrInd = Number(addr - textStart) / 4
+			let instr = assembled.machineCode[instrInd]
+			return [instr, lines[line - 1].trim()]
+		})
 		let machineCode = assembled.machineCode;
 
 		// Load code/data
@@ -295,6 +300,12 @@ export class VisualSim {
 				this.dirLabels.push([addr, label])
 			}
 		}
+
+		// Generate instrAddrs for mem view
+		this.instrAddrs = assembled.instructions.map(([_, addr]) => addr)
+
+		// Show console tab
+		$("#console").show()
 
 		// Hide examples tab
 		$("#examples").hide()
@@ -364,10 +375,18 @@ export class VisualSim {
 			}
 
 			// Update Data Memory
+			let showInstr = $('#showInstructions').prop('checked');
 			$(this.dataMemPanel).find("tbody").empty()
 			for (let [addr, val] of this.sim.ram.data.dump(memWordSize / 8)) {
 				let elem: string
 				if (typeof addr == "bigint") {
+					// Check if it's an instruction address
+					let isInstr = this.instrAddrs.includes(addr & ~3n)
+					// Skip instructions if we don't want to show them
+					if (isInstr && !showInstr) {
+						continue
+					}
+					// Show data value
 					let label = this.dirLabels.find(([a, _]) => a == addr)?.[1];
 					if (label) {
 						$(this.dataMemPanel).find("tbody").append(`<tr><td colspan="2"><b>${label}:</b></td></tr>`)
@@ -533,6 +552,9 @@ export class VisualSim {
 
 		// Hide reg/mem tabs
 		$("#reg-mem-tabs").hide()
+
+		// Hide console
+		$("#console").hide()
 
 		// Show examples tab
 		$("#examples").show()

@@ -1,7 +1,7 @@
 import { Memory } from "./memory"
 import { Bit, Bits, b } from "utils/bits"
 import { TruthTable } from "utils/truthTable"
-import { HALT } from "./constants"
+import { consoleNum, consoleWriteChars, HALT, stackStart, textStart } from "./constants"
 import { intToStr } from "utils/radix"
 
 enum MemSize {
@@ -477,6 +477,17 @@ export class RAM implements Component {
 	}
 
 	reset_outputs() { }
+
+	write(addr: bigint, size: number, data: bigint) {
+		// Program address range
+		if (addr >= textStart && addr + BigInt(size) < stackStart) {
+			this.data.store(addr, size, data);
+		} else if (addr >= consoleNum && addr < consoleWriteChars + 16n) {
+			// TODO
+		} else {
+			throw new Error("Invalid memory write address: " + addr.toString(16));
+		}
+	}
 }
 
 export class PC implements Component {

@@ -219,18 +219,19 @@ export function assembleKeepLineInfo(program: string): Program {
 			}
 			// Add to list
 			directives.push([instr.line, addr]);
+			data.push(directive)
 			// Calc new addr, and align to 4 bytes
 			addr += BigInt(directive.data.length) * BigInt(directive.size);
 			addr += addr % 4n == 0n ? 0n : (4n - addr % 4n);
-			data.push(directive)
 		} else {
 			let matchingRule = instrRules.find(r => ruleMatch(r, instr as AsmInstr))
 			if (matchingRule === undefined) {
 				throw new AssemblerError("Unknown instruction or incorrect args", program, instr.line)
 			}
 			let newInstr = matchingRule.conv(instr.op.toLowerCase(), instr.args.map((a) => a.value), instr.line)
-			addr += 4n;
-			data.push(newInstr);
+			instructions.push([instr.line, addr])
+			data.push(newInstr)
+			addr += 4n
 		}
 	}
 
@@ -243,7 +244,6 @@ export function assembleKeepLineInfo(program: string): Program {
 				throw new AssemblerError(e.message, program, instr.line)
 			}
 			machineCode.push(Bits.toInt(machineCodeInstr));
-			instructions.push([instr.line, Bits.toInt(machineCodeInstr)]);
 		}
 		else {
 			let count = 0;

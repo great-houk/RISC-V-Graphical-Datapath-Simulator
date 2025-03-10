@@ -1,6 +1,6 @@
 import { Bit, Bits, b } from "utils/bits"
 import * as Comp from "./components"
-import { textStart } from "./constants";
+import { stackStart, textStart } from "./constants";
 
 export class Simulator {
 	public code: bigint[] = []; // The code loaded in the simulator
@@ -50,7 +50,7 @@ export class Simulator {
 		// Set some values before the start, bc PC only gets set on the second cycle, so the instruction decoder can load from the wrong addr
 		this.pc.val = Bits(textStart, 32);
 		this.wires.pcVal = this.pc.val;
-		this.setRegisters({ 2: 0xBFFFFFF0n, 3: 0x10008000n }); // sp and gp
+		this.setRegisters({ 2: stackStart }); // sp (don't use gp bc we don't have static data)
 
 		this.setCode(code); // initialize code memory
 		this.setRegisters(regs); // set custom registers
