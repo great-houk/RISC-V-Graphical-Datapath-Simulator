@@ -2,8 +2,10 @@
 # https://github.com/cgyurgyik/riscv-assembly
 
 MAIN:
-    # li a0, 0 # Base of array
-    # li a1, 10 # Length of array
+    lui a0, %hi(ARRAY)
+    addi a0, a0, %lo(ARRAY)
+    lui a1, %hi(ARRAY_LEN)
+    lw a1, ARRAY_LEN(a1)
     jal ra, SEL_SORT
 
     j EXIT
@@ -70,3 +72,6 @@ jalr x0, 0(ra)
 
 EXIT:
 halt
+
+ARRAY: .word 3, -5, 7, -2, 0, -8, 4, 1, -1, 9
+ARRAY_LEN: .word 10

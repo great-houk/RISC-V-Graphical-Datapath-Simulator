@@ -222,7 +222,7 @@ export function assembleKeepLineInfo(program: string): Program {
 			data.push(directive)
 			// Calc new addr, and align to 4 bytes
 			addr += BigInt(directive.data.length) * BigInt(directive.size);
-			addr += addr % 4n == 0n ? 0n : (4n - addr % 4n);
+			addr = (addr + 3n) & ~3n;
 		} else {
 			let matchingRule = instrRules.find(r => ruleMatch(r, instr as AsmInstr))
 			if (matchingRule === undefined) {

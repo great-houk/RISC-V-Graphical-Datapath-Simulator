@@ -66,6 +66,8 @@ export class VisualSim {
 		this.instrMemEditor = CodeMirror.fromTextArea($(this.instrMemPanel).find<HTMLTextAreaElement>(".editor textarea")[0], {
 			mode: "riscv",
 			lineNumbers: true,
+			indentWithTabs: true,
+			tabSize: 4,
 		});
 		$(this.editors).find(".view").hide()
 
@@ -114,6 +116,14 @@ export class VisualSim {
 				$("#reg-mem-tabs").hide()
 			}
 		})
+
+		$("#consoleInput").on("keydown", (event) => {
+			if (event.key == "Enter") {
+				let text = $(event.target).val() as string
+				this.consoleInput(text)
+				$(event.target).val("")
+			}
+		});
 
 		// reformat number on input
 		$("#dataMem-radix, #dataMem-word-size, #regFile-radix, #showInstructions").on("change", (event) => this.updateEditorsAndViews())
@@ -304,6 +314,9 @@ export class VisualSim {
 		// Generate instrAddrs for mem view
 		this.instrAddrs = assembled.instructions.map(([_, addr]) => addr)
 
+		// Clear console
+		$("#consoleText").text("")
+
 		// Show console tab
 		$("#console").show()
 
@@ -377,7 +390,7 @@ export class VisualSim {
 			// Update Data Memory
 			let showInstr = $('#showInstructions').prop('checked');
 			$(this.dataMemPanel).find("tbody").empty()
-			for (let [addr, val] of this.sim.ram.data.dump(memWordSize / 8)) {
+			for (let [addr, val] of this.sim.ram.dump(memWordSize / 8)) {
 				let elem: string
 				if (typeof addr == "bigint") {
 					// Check if it's an instruction address
@@ -404,6 +417,12 @@ export class VisualSim {
 				$(registerTds[i]).text(`${intToStr(reg, regRadix)}`)
 			}
 			$(registerTds[32]).text(`${intToStr(Bits.toInt(this.sim.wires.pcVal), regRadix)}`);
+
+			// Update console
+			let consoleOutput = $("#consoleText")
+			let curr = consoleOutput.text()
+			consoleOutput.text(curr + this.sim.ram.consoleOutput)
+			this.sim.ram.consoleOutput = ""
 		}
 	}
 
@@ -469,6 +488,10 @@ export class VisualSim {
 		this.updateDatapath()
 	}
 
+	/** Handles console input */
+	private consoleInput(text: string) {
+		this.sim.ram.consoleInputBuffer += text + "\n"
+	}
 	/** Start playing the simulation. */
 	public play() {
 		if (this.step()) { // try to do first step immediately

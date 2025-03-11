@@ -21,11 +21,16 @@ export const examples: Example[] = [
 		name: "Bubble Sort",
 		description: "The bubble sort algorithm",
 		url: require("assets/examples/bubbleSort.s"),
-		dataMemRadix: "signed", regFileRadix: "signed",
+		dataMemRadix: "hex", regFileRadix: "hex",
 	}, {
 		name: "Selection Sort",
 		description: "The selection sort algorithm",
 		url: require("assets/examples/selectionSort.s"),
-		dataMemRadix: "signed", regFileRadix: "signed",
+		dataMemRadix: "hex", regFileRadix: "hex",
+	}, {
+		name: "Guessing Game",
+		description: "A simple number guessing game",
+		url: require("assets/examples/guess.s"),
+		dataMemRadix: "hex", regFileRadix: "hex",
 	}
 ]

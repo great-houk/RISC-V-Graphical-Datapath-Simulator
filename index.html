@@ -30,12 +30,6 @@
 					</button>
 					<ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="examples-button"></ul>
 				</li>
-				<li id="console" role="presentation" style="display: none;">
-					<button class="nav-link" id="console-tab" data-bs-toggle="tab" data-bs-target="#console-panel"
-						type="button" role="tab" aria-controls="console-panel" aria-selected="true">
-						Console
-					</button>
-				</li>
 			</ul>
 			<ul class="nav nav-tabs flex-row flex-nowrap" id="reg-mem-tabs" role="tablist" style="display: none;">
 				<li class="nav-item" role="presentation">
@@ -49,6 +43,12 @@
 					<button class="nav-link" id="dataMem-tab" data-bs-toggle="tab" data-bs-target="#dataMem-panel"
 						type="button" role="tab" aria-controls="dataMem-panel" aria-selected="false">
 						Memory
+					</button>
+				</li>
+				<li id="console" role="presentation" style="display: none;">
+					<button class="nav-link" id="console-tab" data-bs-toggle="tab" data-bs-target="#console-panel"
+						type="button" role="tab" aria-controls="console-panel" aria-selected="true">
+						Console
 					</button>
 				</li>
 			</ul>
@@ -65,17 +65,19 @@
 						<textarea placeholder="Write RISC&#8209;V assembly..."></textarea>
 					</div>
 					<div class="view flex-row" style="display: flex">
-						<table class="table table-striped table-hover table-bordered address-table">
-							<thead>
-								<tr>
-									<th>Address</th>
-									<th>Instruction</th>
-									<th>Code</th>
-								</tr>
-							</thead>
-							<tbody id="instrMem-table"></tbody>
-						</table>
-						<div class="container tab-content" style="min-height: 0; width: 600px;">
+						<div class="overflow-auto flex-grow-1">
+							<table class="table table-striped table-hover table-bordered address-table">
+								<thead>
+									<tr>
+										<th>Address</th>
+										<th>Instruction</th>
+										<th>Code</th>
+									</tr>
+								</thead>
+								<tbody id="instrMem-table"></tbody>
+							</table>
+						</div>
+						<div class="overflow-auto container tab-content" style="min-height: 0; width: 600px;">
 							<div id="regFile-panel" class="tab-pane fade show active" role="tabpanel"
 								aria-labelledby="regFile-tab">
 								<div class="d-flex flex-row">
@@ -120,14 +122,16 @@
 									<tbody></tbody>
 								</table>
 							</div>
-						</div>
-					</div>
-				</div>
-				<div id="console-panel" class="tab-pane fade" role="tabpanel" aria-labelledby="console-tab">
-					<div class="console">
-						<div class="console-output"></div>
-						<div class="console-input">
-							<input type="text" placeholder="Enter a command..." />
+							<div id="console-panel" class="h-100 tab-pane fade" role="tabpanel"
+								aria-labelledby="console-tab">
+								<div class="d-flex flex-column h-100">
+									<div id="consoleText" class="m-1 border h-100" style="white-space: pre-wrap;"></div>
+									<div class="m-1">
+										<input id="consoleInput" class="form-control" type="text"
+											placeholder="Enter text..." />
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

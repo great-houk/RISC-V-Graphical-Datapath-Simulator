@@ -17,7 +17,7 @@
 	/* There is a bug in Firefox (see https://bugzilla.mozilla.org/show_bug.cgi?id=764076) where the scrollbar isn't accounted for,
        causing a x scrollbar to show even though it should be expanding to fit. A workaround is "overflow-y: scroll" but then the
        scrollbar always shows. */
-	overflow: auto;
+	/* overflow: auto; */
 }
 
 #editors .form-select {
@@ -104,7 +104,28 @@ p {
 	font-size: 150%
 }
 
-
+#consoleText {
+	/* Monospace font for a console feel */
+	font-family: 'Courier New', Courier, monospace;
+	/* Add some padding for a nice space around the text */
+	padding: 10px;
+	/* Optional: rounded corners for a cleaner look */
+	border-radius: 5px;
+	/* Adjust the height as needed */
+	height: 300px;
+	/* Full width of the container */
+	width: 100%;
+	/* Enable vertical scrolling */
+	overflow-y: auto;
+	/* Preserve whitespace, like new lines */
+	white-space: pre-wrap;
+	/* Make sure padding doesn't affect width/height */
+	box-sizing: border-box;
+	/* Darker border for a subtle look */
+	font-size: 14px;
+	/* Standard console font size */
+	border: 2px solid #333;
+}
 
 /** ==== Table Styling === */
 

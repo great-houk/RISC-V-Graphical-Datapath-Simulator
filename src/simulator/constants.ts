@@ -7,6 +7,7 @@ export const consoleNum = 0x0002_1000n // Only uses lower 5 bits
 export const consoleChars = 0x0002_1004n // Array of consoleNumReady[0:4] + 1 characters (max 16)
 export const consoleWriteNum = 0x0002_1014n // Only uses lower 5 bits, same format as consoleNumReady, bit 5 is set when done writing
 export const consoleWriteChars = 0x0002_1018n // Array of consoleWriteNum[0:4] + 1 characters (max 16)
+export const randomNum = 0x0002_2000n // 32 bit random number
 
 /** Maps numbers to their register name. */
 export const registerNames = [

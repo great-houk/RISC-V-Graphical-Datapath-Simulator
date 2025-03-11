@@ -1,7 +1,7 @@
 import { Memory } from "./memory"
 import { Bit, Bits, b } from "utils/bits"
 import { TruthTable } from "utils/truthTable"
-import { consoleNum, consoleWriteChars, HALT, stackStart, textStart } from "./constants"
+import { consoleChars, consoleNum, consoleWriteChars, consoleWriteNum, HALT, randomNum, stackStart, textStart } from "./constants"
 import { intToStr } from "utils/radix"
 
 enum MemSize {
@@ -443,6 +443,10 @@ export class RAM implements Component {
 	public data: Memory;
 	public last_data_read: Bits = Bits(0n, 32);
 	public readOutput: Bits = []; // 32 bits
+	public consoleInputBuffer: string = "";
+	public consoleOutput: string = "";
+	private consoleDelay: number = 0;
+	private consoleRegs: bigint[] = Array(10).fill(0n);
 	private wires: Wires;
 	private static format = new TruthTable<number>([
 		[["00"], 1], // byte
@@ -460,11 +464,15 @@ export class RAM implements Component {
 		let data = Bits.toInt(this.wires.readData2, false);
 		let size = RAM.format.match(this.wires.memSize);
 
-		if (this.wires.memWrite) {
-			this.data.store(addr, size, data);
+		let output = this.update(addr, size, data, this.wires.memWrite);
+
+		this.consoleDelay = this.consoleDelay == 0 ? 0 : this.consoleDelay - 1;
+		if (this.consoleDelay == 0) {
+			this.consoleRegs[5] &= 0x0Fn;
+			this.consoleDelay = Math.floor(Math.random() * 15) + 5;
 		}
 
-		let bits = Bits(this.data.load(addr, size), size * 8);
+		let bits = Bits(output, size * 8);
 		this.readOutput = Bits.extended(bits, 32, this.wires.memUnsigned == 0);
 
 		if (this.wires.memAddrMuxSrc == MemAddrSrc.ALUOut) {
@@ -478,14 +486,99 @@ export class RAM implements Component {
 
 	reset_outputs() { }
 
-	write(addr: bigint, size: number, data: bigint) {
+	update(addr: bigint, size: number, data: bigint, write: Bit): bigint {
+		// Update console input buffer
+		if (this.consoleInputBuffer.length > 0 && this.consoleRegs[0] != 0x1Fn) {
+			let currentAmount;
+			if ((this.consoleRegs[0] & 0x10n) == 0n)
+				currentAmount = 0n;
+			else
+				currentAmount = (this.consoleRegs[0] & 0xFn) + 1n;
+			let addAmount = Math.min(this.consoleInputBuffer.length, Number(16n - currentAmount));
+			let string = this.consoleInputBuffer.slice(0, addAmount);
+			this.consoleInputBuffer = this.consoleInputBuffer.slice(addAmount);
+			// Write read amount
+			this.consoleRegs[0] = 0x10n | ((currentAmount == 0n ? -1n : currentAmount) + BigInt(addAmount));
+			// Write chars into the regs
+			for (let i = Number(currentAmount); i < Number(currentAmount) + addAmount; i++) {
+				let ind = Math.floor(i / 4) + 1;
+				let offset = BigInt(i % 4) * 8n;
+				let charCode = BigInt(string.charCodeAt(i - Number(currentAmount)));
+				this.consoleRegs[ind] = (this.consoleRegs[ind] & ~(0xFFn << offset)) | (charCode << offset);
+			}
+		}
 		// Program address range
-		if (addr >= textStart && addr + BigInt(size) < stackStart) {
-			this.data.store(addr, size, data);
-		} else if (addr >= consoleNum && addr < consoleWriteChars + 16n) {
-			// TODO
+		if (addr >= textStart && addr + BigInt(size) <= stackStart) {
+			if (write)
+				this.data.store(addr, size, data);
+			return this.data.load(addr, size);
+		} else if (addr >= consoleNum && addr + BigInt(size) <= consoleWriteChars + 16n) {
+			if (write) {
+				// Prevent writing to consoleChars
+				if (addr >= consoleChars && addr < consoleChars + 16n) {
+					throw new Error("Tried to write to a read-only console register: " + addr.toString(16));
+				}
+				// Check if we're writing to consoleWriteNum with the valid bit set
+				if (addr == consoleWriteNum && (data & 0x10n) == 0x10n) {
+					// Check if the wait bit is still set
+					if ((this.consoleRegs[5] & 0x10n) == 0x10n) {
+						throw new Error("Tried to write to console output while it hadn't finished processing the last write");
+					}
+
+					let num = (data & 0xFn) + 1n;
+					for (let i = 0; i < num; i++) {
+						let offset = BigInt(i % 4) * 8n;
+						let charCode = 0xFFn & (this.consoleRegs[Math.floor(i / 4) + 6] >> offset);
+						let char = charCode >= 0 && charCode <= 127 ? String.fromCharCode(Number(charCode)) : "\uFFFD";
+						this.consoleOutput += char;
+					}
+					this.consoleDelay += 5;
+				}
+				// Write like noraml
+				let ind = Number((addr - consoleNum) / 4n);
+				let offset = (addr % 4n) * 8n;
+				let mask = size == 1 ? 0xFFn : size == 2 ? 0xFFFFn : 0xFFFF_FFFFn;
+				this.consoleRegs[ind] = (this.consoleRegs[ind] & ~(mask << offset)) | (data << offset);
+			}
+			// Read from console
+			addr = addr - consoleNum;
+			let ind = Number(addr / 4n);
+			if (ind > 10) {
+				throw new Error("Invalid memory address: " + addr.toString(16))
+			}
+			let offset = addr % 4n;
+			let mask = size == 1 ? 0xFFn : size == 2 ? 0xFFFFn : 0xFFFF_FFFFn;
+			return mask & (this.consoleRegs[ind] >> (offset * 8n))
+		} else if (addr >= randomNum && addr + BigInt(size) <= randomNum + 4n) {
+			if (write) {
+				throw new Error("Tried to write to read-only memory address: " + addr.toString(16));
+			}
+			let mask = size == 1 ? 0xFF : size == 2 ? 0xFFFF : 0xFFFF_FFFF;
+			return BigInt(Math.floor(Math.random() * mask))
 		} else {
-			throw new Error("Invalid memory write address: " + addr.toString(16));
+			throw new Error("Invalid memory address: " + addr.toString(16))
+		}
+	}
+
+	dump(size: number) {
+		let dump = this.data.dump(size);
+		return this.addConsoleRegs(dump, size);
+	}
+
+	private *addConsoleRegs(orig: Generator<[bigint | [bigint, bigint], bigint]>, size: number): Generator<[bigint | [bigint, bigint], bigint]> {
+		yield* orig
+		for (let i = 0; i < 10; i++) {
+			if (size == 1) {
+				yield [0x0002_1000n + BigInt(i) * 4n + 0n, (this.consoleRegs[i] << 0n) & 0xFFn];
+				yield [0x0002_1000n + BigInt(i) * 4n + 1n, (this.consoleRegs[i] << 8n) & 0xFFn];
+				yield [0x0002_1000n + BigInt(i) * 4n + 2n, (this.consoleRegs[i] << 16n) & 0xFFn];
+				yield [0x0002_1000n + BigInt(i) * 4n + 3n, (this.consoleRegs[i] << 24n) & 0xFFn];
+			} else if (size == 2) {
+				yield [0x0002_1000n + BigInt(i) * 4n + 0n, (this.consoleRegs[i] << 0n) & 0xFFFFn];
+				yield [0x0002_1000n + BigInt(i) * 4n + 2n, (this.consoleRegs[i] << 16n) & 0xFFFFn];
+			} else if (size == 4) {
+				yield [0x0002_1000n + BigInt(i) * 4n, this.consoleRegs[i]];
+			}
 		}
 	}
 }
