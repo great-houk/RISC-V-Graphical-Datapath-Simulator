@@ -56,4 +56,4 @@ directive -> %directive directiveArg ("," directiveArg):* {%
     args: [firstArg, ...restArgs.flat().map(([_, a]) => a)]
   }) 
 %}
-directiveArg -> (indentifier | number | anything) {% ([[arg]]) => arg %}
+directiveArg -> (identifier | number | anything) {% ([[arg]]) => arg %}
