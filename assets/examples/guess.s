@@ -41,7 +41,7 @@ parse_num_loop:
 	add t0, t0, t1
 	j parse_num_loop
 parse_num_error:
-	addi t0, zero, -1
+	addi t2, zero, -1
 parse_num_end:
 	add a0, t2, zero
 	ret
