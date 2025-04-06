@@ -81,7 +81,7 @@ module.exports = (env) => ({
 	},
 	output: {
 		filename: '[name].bundle.js',
-		path: path.resolve(__dirname, '../html'),
+		path: path.resolve(__dirname, '../html/riscv'),
 		clean: true,
 	},
 	optimization: {
