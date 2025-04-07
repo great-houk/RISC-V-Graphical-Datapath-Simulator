@@ -20,6 +20,10 @@ parse_num:
 	# t1 = char
 	# t2 = scratch/final answer
 	addi t0, zero, 0
+	# Check empty string
+	lb t1, 0(a0)
+	addi t2, t1, -10
+	beq t2, zero, parse_num_error
 parse_num_loop:
 	# Multiply t0 by 10 (but store previous val in t2)
 	add t2, t0, zero
@@ -163,4 +167,4 @@ error: .string "Number not valid! Please try again"
 success: .string "Congrats! You guessed it :)"
 higher: .string "Just a little bit higher"
 lower: .string "A smidgen lower"
-string: .string "Buffer string so there's space to store it"
+string: .string "Buffer string so there's space to store inputs"

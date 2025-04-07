@@ -198,15 +198,28 @@ table.table-fit tbody td, table.table-fit tfoot td {
 }
 
 /** Highlight powered wires. */
-#datapath .powered.wire {
-	stroke: blue !important;
+#datapath .powered {
+	stroke: rgb(108, 255, 144) !important;
 	/* I'm abusing !important, but it lets us override inline styles and inkscapes's svg will
                                   usually have lots of inline styles. */
 }
 
 #datapath marker.powered * {
-	stroke: blue !important;
-	fill: blue !important;
+	stroke: rgb(108, 255, 144) !important;
+	fill: rgb(108, 255, 144) !important;
+}
+
+#datapath .active {
+	stroke: rgb(0, 162, 255) !important;
+}
+
+#datapath marker.active * {
+	stroke: rgb(0, 162, 255) !important;
+	fill: rgb(0, 162, 255) !important;
+}
+
+#datapath .mux-wire {
+	stroke: rgb(0, 0, 0) !important;
 }
 
 /** Styles for wire hover and fixing powered wire markers will be generated dynamically in JS since we can't make CSS

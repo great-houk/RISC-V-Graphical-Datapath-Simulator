@@ -14,11 +14,12 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <style
-     id="style1">.hide-when-not-running {  }
+     id="style1">.mux-wire {   }
+.hide-when-not-running {   }
 .wires {   }
 .wire { stroke-opacity:1;    stroke-width:0.5;    stroke-miterlimit:4;    stroke-linejoin:miter;    stroke-linecap:butt;    stroke-dasharray:none;    stroke:#000000;    mix-blend-mode:normal;    fill:none;    display:inline; }
 text.value-label, text.value-label tspan { display:inline;    fill:#000000;    fill-opacity:1;    filter:url(#bg-filter);    font-family:monospace;    font-size:3.88056px;    font-stretch:normal;    font-style:normal;    font-variant:normal;    font-variant-caps:normal;    font-variant-east-asian:normal;    font-variant-ligatures:normal;    font-variant-numeric:normal;    font-weight:normal;    -inkscape-font-specification:'monospace, Normal';    line-height:1.25;    stroke:none;    stroke-width:0.264583;    text-align:center;    text-anchor:middle ; }
-.component { stroke-width:0.265;    stroke-opacity:1;    stroke-miterlimit:4;    stroke-linejoin:round;    stroke-linecap:round;    stroke:#000000;    fill-rule:evenodd;    fill-opacity:1;    fill:#fffffd; }
+.component { stroke-width:0.35;    stroke-opacity:1;    stroke-miterlimit:4;    stroke-linejoin:round;    stroke-linecap:round;    stroke:#000000;    fill-rule:evenodd;    fill-opacity:1;    fill:#fffffd; }
 .component-name { -inkscape-font-specification:'Arial, Bold';    fill:#000000;    fill-opacity:1;    font-family:Arial;    font-size:4.58611px;    font-stretch:normal;    font-style:normal;    font-variant:normal;    font-variant-caps:normal;    font-variant-east-asian:normal;    font-variant-ligatures:normal;    font-variant-numeric:normal;    font-weight:bold;    line-height:1.25;    stroke:none;    stroke-width:0.264583;    text-align:right;    text-anchor:middle; }
 .section-name { -inkscape-font-specification:'Arial, Bold';    fill:#000000;    fill-opacity:1;    font-family:Arial;    font-size:7px;    font-stretch:normal;    font-style:normal;    font-variant:normal;    font-variant-caps:normal;    font-variant-east-asian:normal;    font-variant-ligatures:normal;    font-variant-numeric:normal;    font-weight:bold;    line-height:1.25;    stroke:none;    stroke-width:0.4;    text-align:right;    text-anchor:middle; }
 .label { -inkscape-font-specification:'Arial, Normal';    fill:#000000;    fill-opacity:1;    font-family:Arial;    font-size:4.58611px;    font-stretch:normal;    font-style:normal;    font-variant:normal;    font-variant-caps:normal;    font-variant-east-asian:normal;    font-variant-ligatures:normal;    font-variant-numeric:normal;    font-weight:normal;    line-height:1.25;    stroke-width:0.264583; }
@@ -34,15 +35,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.51981272"
-     inkscape:cx="976.31316"
-     inkscape:cy="357.82118"
-     inkscape:window-width="1504"
-     inkscape:window-height="932"
+     inkscape:zoom="2.9405047"
+     inkscape:cx="939.63462"
+     inkscape:cy="449.75273"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
      inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-y="258"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="svg1" />
   <defs
      id="defs1">
     <marker
@@ -656,7 +657,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path7"
          sodipodi:nodetypes="cc"
          class="wire"
-         inkscape:label="writeDataMuxSrc" />
+         inkscape:label="writeDataMuxSrc"
+         stage="writeback" />
       <text
          xml:space="preserve"
          x="559.85516"
@@ -678,7 +680,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;marker-start:url(#Arrow-9-3)"
          sodipodi:nodetypes="cc"
-         inkscape:label="regWrite" />
+         inkscape:label="regWrite"
+         stage="writeback" />
       <text
          xml:space="preserve"
          x="611.09161"
@@ -701,7 +704,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path52"
          class="wire"
          sodipodi:nodetypes="cc"
-         inkscape:label="loadInstr" />
+         inkscape:label="loadInstr"
+         stage="fetch" />
       <text
          xml:space="preserve"
          x="443.31268"
@@ -736,7 +740,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          transform="translate(-254.61565,1.6542418)"
          inkscape:label="memWrite"
-         sodipodi:nodetypes="ccc" />
+         sodipodi:nodetypes="ccc"
+         stage="mem" />
     </g>
     <g
        id="memFormat"
@@ -760,7 +765,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          transform="translate(-250.55126,1.6542418)"
          inkscape:label="memFormat"
-         sodipodi:nodetypes="ccc" />
+         sodipodi:nodetypes="ccc"
+         stage="mem" />
     </g>
     <g
        id="aluSrc"
@@ -784,14 +790,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path65"
          class="wire"
          transform="translate(-18.451158)"
-         inkscape:label="aluSrcCombined" />
+         inkscape:label="aluSrcCombined"
+         stage="execute" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.5, 0.5;stroke-dashoffset:0;stroke-opacity:1"
          d="m 661.51027,446.43328 v 1.69592"
          id="path65-0"
          class="wire"
          sodipodi:nodetypes="cc"
-         inkscape:label="aluSrcCombined" />
+         inkscape:label="aluSrcCombined"
+         stage="execute" />
     </g>
     <g
        id="aluOp"
@@ -815,7 +823,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          transform="translate(-18.451158)"
          sodipodi:nodetypes="ccc"
-         inkscape:label="aluOpCombined" />
+         inkscape:label="aluOpCombined"
+         stage="execute" />
     </g>
     <g
        id="aluCalc"
@@ -839,13 +848,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path79"
          class="wire"
          inkscape:label="aluCalc"
-         sodipodi:nodetypes="cc" />
+         sodipodi:nodetypes="cc"
+         stage="execute" />
       <path
          style="stroke-dasharray:0.5, 0.5;stroke-dashoffset:0"
          d="m 676.5904,444.02755 v 6.47849"
          id="path80"
          class="wire"
-         inkscape:label="aluCalc" />
+         inkscape:label="aluCalc"
+         stage="execute" />
     </g>
     <g
        id="branchBaseSrc"
@@ -870,7 +881,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          sodipodi:nodetypes="ccc"
          transform="rotate(-90,561.88687,274.90838)"
-         inkscape:label="jumpControlSrc" />
+         inkscape:label="jumpControlSrc"
+         stage="writeback" />
     </g>
     <g
        id="branchZero"
@@ -895,7 +907,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          sodipodi:nodetypes="ccccc"
          transform="rotate(-90,569.23552,267.49609)"
-         inkscape:label="branchZero" />
+         inkscape:label="branchZero"
+         stage="writeback" />
     </g>
     <g
        id="branchNotZero"
@@ -920,7 +933,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          sodipodi:nodetypes="ccccc"
          transform="rotate(-90,569.23552,267.49609)"
-         inkscape:label="branchNotZero" />
+         inkscape:label="branchNotZero"
+         stage="writeback" />
     </g>
     <g
        id="pcLoad"
@@ -944,7 +958,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          transform="translate(260.21894)"
          sodipodi:nodetypes="ccc"
-         inkscape:label="loadPC" />
+         inkscape:label="loadPC"
+         stage="writeback" />
     </g>
   </g>
   <g
@@ -962,7 +977,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          x="707.07141"
          y="436.63177"
          class="component"
-         style="display:inline;mix-blend-mode:normal" />
+         style="display:inline;mix-blend-mode:normal"
+         stage="writeback" />
       <text
          xml:space="preserve"
          x="712.02216"
@@ -988,14 +1004,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            class="wire"
            transform="translate(190.21536,-174.55903)"
            sodipodi:nodetypes="cc"
-           inkscape:label="pcVal" />
+           inkscape:label="pcVal"
+           stage="writeback" />
         <path
            style="marker-start:url(#Junction);marker-end:url(#Arrow)"
            d="m 721.49056,443.53936 v 24 h 17.11504"
            id="path40"
            class="wire"
            sodipodi:nodetypes="ccc"
-           inkscape:label="pcVal" />
+           inkscape:label="pcVal"
+           stage="writeback" />
         <path
            style="marker-end:url(#Arrow)"
            d="M 531.30308,618.03466 V 594.16452 H 438.2176 v 16.17283 h 6.75072"
@@ -1003,7 +1021,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            class="wire"
            sodipodi:nodetypes="ccccc"
            transform="translate(190.21535,-174.55903)"
-           inkscape:label="pcVal" />
+           inkscape:label="pcVal"
+           stage="writeback" />
         <path
            style="marker-start:url(#Junction);marker-end:url(#Arrow)"
            d="m 142.97333,345.35814 v 38.46995 H 446.21538 V 329.3644 h 20.18706"
@@ -1011,7 +1030,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            class="wire"
            transform="translate(578.52029,122.11934)"
            sodipodi:nodetypes="ccccc"
-           inkscape:label="pcVal" />
+           inkscape:label="pcVal"
+           stage="writeback" />
       </g>
     </g>
     <g
@@ -1048,20 +1068,20 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            y="-496.13962"
            id="tspan866-2-1-1">1</tspan></text>
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,499.63934 7,5"
          id="path1597-7-1-1"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="pcSrcMux1" />
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,509.63934 7,-5"
          id="path1597-3-6-9-3-5"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="pcSrcMux0" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-4)"
@@ -1070,7 +1090,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          inkscape:label="pcIn"
          transform="matrix(1,0,0,-1,89.305886,1123.3302)"
-         sodipodi:nodetypes="cc" />
+         sodipodi:nodetypes="cc"
+         stage="writeback" />
     </g>
     <g
        id="pcInc"
@@ -1124,13 +1145,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            class="wire"
            transform="translate(-3.23924,19.07553)"
            inkscape:label="pcVal4"
-           sodipodi:nodetypes="cccccc" />
+           sodipodi:nodetypes="cccccc"
+           stage="writeback" />
         <path
            style="marker-start:url(#Junction);marker-end:url(#Arrow)"
            d="M 183.08563,354.15489 H 360.20485"
            id="path49"
            class="wire"
-           inkscape:label="pcVal4" />
+           inkscape:label="pcVal4"
+           stage="writeback" />
       </g>
     </g>
   </g>
@@ -1238,7 +1261,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          inkscape:connector-type="polyline"
          inkscape:connector-curvature="0"
          class="wire"
-         inkscape:label="jumpAddr" />
+         inkscape:label="jumpAddr"
+         stage="writeback" />
     </g>
     <g
        id="jalrMux"
@@ -1273,20 +1297,20 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            y="499.37991"
            id="tspan866-2-1-1-9">0</tspan></text>
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,499.63934 7,5"
          id="path1597-7-1-1-8"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="jumpControlSrc0" />
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,509.63934 7,-5"
          id="path1597-3-6-9-3-5-6"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="jumpControlSrc1" />
       <path
          style="display:inline;marker-end:url(#Arrow-9-3)"
@@ -1295,7 +1319,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          inkscape:label="Addr Calc In"
          sodipodi:nodetypes="cc"
-         transform="translate(-77.403317,-45.543188)" />
+         transform="translate(-77.403317,-45.543188)"
+         stage="writeback" />
     </g>
   </g>
   <g
@@ -1312,7 +1337,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
       <path
          d="m 795.86212,573.9791 v -16.209 l 4.409,-4.989 -4.521,-5.206 v -15.337 l 29.338,10.735 v 19.427 c 0,0 -25.384,9.359 -29.222,11.575"
          class="component"
-         id="path619" />
+         id="path619"
+         stage="execute" />
       <text
          class="component-name"
          x="810.85657"
@@ -1355,7 +1381,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            x="-624.24554"
            y="-534.39539">Op</tspan></text>
       <g
-         id="g2"
+         id="aluZero"
          inkscape:label="aluZero"
          class="wires">
         <path
@@ -1364,14 +1390,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            transform="matrix(-1,0,0,1,1431.8189,29.838717)"
            class="wire"
            sodipodi:nodetypes="ccccc"
-           inkscape:label="aluZero" />
+           inkscape:label="aluZero"
+           stage="execute" />
         <path
            style="marker-start:url(#Junction)"
            d="m 1060.6418,466.01571 v 6.79342"
            id="path55"
            class="wire"
            transform="matrix(-1,0,0,1,1488.746,22.216945)"
-           inkscape:label="aluZero" />
+           inkscape:label="aluZero"
+           stage="execute" />
       </g>
       <g
          id="g1"
@@ -1385,7 +1413,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            inkscape:connector-curvature="0"
            class="wire"
            sodipodi:nodetypes="cc"
-           inkscape:label="aluOut" />
+           inkscape:label="aluOut"
+           stage="execute" />
         <path
            style="display:inline;marker-start:url(#Junction);marker-end:url(#Arrow)"
            d="m 588.45612,517.5778 v -75.49068 h 204.2352 v 52.56829 h -20.26736"
@@ -1393,7 +1422,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            class="wire"
            sodipodi:nodetypes="ccccc"
            transform="matrix(-1,0,0,1,1431.8189,29.838717)"
-           inkscape:label="aluOut" />
+           inkscape:label="aluOut"
+           stage="execute" />
       </g>
     </g>
     <g
@@ -1430,20 +1460,20 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            y="-496.13962"
            id="tspan866-2">0</tspan></text>
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,499.63934 7,5"
          id="path1597-7"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="aluSrc20" />
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,509.63934 7,-5"
          id="path1597-3-6-9"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="aluSrc21" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-9)"
@@ -1451,7 +1481,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path10-5"
          class="wire"
          inkscape:label="aluIn2"
-         transform="translate(-2.7083328e-7,27.989335)" />
+         transform="translate(-2.7083328e-7,27.989335)"
+         stage="execute" />
     </g>
     <g
        id="aluSrcMux1"
@@ -1487,20 +1518,20 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
            y="-496.13962"
            id="tspan866-2-1">0</tspan></text>
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,499.63934 7,5"
          id="path1597-7-1"
          sodipodi:nodetypes="cc"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="aluSrc10" />
       <path
-         class="wire"
+         class="wire  mux-wire"
          d="m 587.35501,509.63934 7,-5"
          id="path1597-3-6-9-3"
          sodipodi:nodetypes="cc"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="aluSrc11" />
       <path
          style="display:inline;marker-end:url(#Arrow)"
@@ -1509,7 +1540,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          inkscape:label="aluIn1"
          transform="matrix(-1,0,0,1,1237.6666,-33.153251)"
-         sodipodi:nodetypes="cc" />
+         sodipodi:nodetypes="cc"
+         stage="execute" />
     </g>
     <g
        id="in1FF"
@@ -1524,7 +1556,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          transform="scale(-1)"
          rx="0"
          ry="0"
-         class="component" />
+         class="component"
+         stage="execute" />
       <text
          class="label"
          x="-648.77374"
@@ -1546,7 +1579,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path38-4"
          inkscape:connector-type="polyline"
          inkscape:connector-curvature="0"
-         class="wire" />
+         class="wire"
+         stage="execute" />
     </g>
     <g
        id="in2FF"
@@ -1562,7 +1596,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          rx="0"
          ry="0"
          class="component"
-         style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+         style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+         stage="execute" />
       <text
          class="label"
          x="-649.07385"
@@ -1584,7 +1619,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path38"
          inkscape:connector-type="polyline"
          inkscape:connector-curvature="0"
-         class="wire" />
+         class="wire"
+         stage="execute" />
     </g>
   </g>
   <g
@@ -1598,9 +1634,10 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        inkscape:label="Register File">
       <path
          id="rect1052-7"
-         style="fill:#fffffd;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round"
+         style=""
          class="component"
-         d="m 125.02954,124.07574 h 43.03578 v 60.93177 h -43.03578 z" />
+         d="m 125.02954,124.07574 h 43.03578 v 60.93177 h -43.03578 z"
+         stage="writeback" />
       <path
          d="m 146.24561,182.72501 v -3.28283 h 1.39509 q 0.52624,0 0.76361,0.0896 0.2396,0.0873 0.38292,0.3135 0.14331,0.22617 0.14331,0.51728 0,0.36949 -0.21721,0.61133 -0.21721,0.23961 -0.6494,0.30231 0.21497,0.1254 0.35381,0.27544 0.14108,0.15003 0.37845,0.53295 l 0.40083,0.64045 h -0.79271 l -0.47922,-0.71434 q -0.25528,-0.38293 -0.34933,-0.48146 -0.0941,-0.10077 -0.1993,-0.13659 -0.10525,-0.0381 -0.33366,-0.0381 h -0.13435 v 1.37046 z m 0.66284,-1.89446 h 0.49041 q 0.47697,0 0.59565,-0.0403 0.11869,-0.0403 0.18587,-0.13884 0.0672,-0.0985 0.0672,-0.24632 0,-0.16571 -0.0896,-0.26648 -0.0873,-0.10301 -0.24856,-0.12988 -0.0806,-0.0112 -0.48369,-0.0112 h -0.51728 z m 4.01956,1.13757 0.62701,0.10525 q -0.12092,0.34485 -0.38292,0.52623 -0.25976,0.17915 -0.65164,0.17915 -0.62029,0 -0.91812,-0.40532 -0.23513,-0.3247 -0.23513,-0.81958 0,-0.59118 0.30903,-0.92484 0.30902,-0.3359 0.78152,-0.3359 0.53071,0 0.8375,0.35158 0.30678,0.34933 0.29335,1.07263 h -1.57648 q 0.007,0.27991 0.15228,0.43666 0.14555,0.15451 0.36276,0.15451 0.1478,0 0.24857,-0.0806 0.10077,-0.0806 0.15227,-0.25976 z m 0.0358,-0.63597 q -0.007,-0.27319 -0.14108,-0.41427 -0.13436,-0.14331 -0.32694,-0.14331 -0.20601,0 -0.34037,0.15003 -0.13436,0.15003 -0.13212,0.40755 z m 1.07935,1.54961 0.71882,0.0873 q 0.0179,0.1254 0.0829,0.17243 0.0896,0.0672 0.28215,0.0672 0.24633,0 0.36949,-0.0739 0.0829,-0.0493 0.1254,-0.15899 0.0291,-0.0784 0.0291,-0.28887 v -0.3471 q -0.28215,0.38517 -0.7121,0.38517 -0.47921,0 -0.75912,-0.40532 -0.21946,-0.32022 -0.21946,-0.79719 0,-0.5979 0.28664,-0.91364 0.28887,-0.31575 0.71657,-0.31575 0.44115,0 0.72778,0.3874 v -0.33365 h 0.58894 v 2.13406 q 0,0.42099 -0.0694,0.62925 -0.0694,0.20825 -0.19482,0.32694 -0.1254,0.11868 -0.3359,0.18586 -0.20825,0.0672 -0.52847,0.0672 -0.60462,0 -0.85766,-0.20826 -0.25304,-0.20601 -0.25304,-0.524 0,-0.0314 0.002,-0.0761 z m 0.56207,-1.39509 q 0,0.37844 0.14555,0.55535 0.14779,0.17466 0.36277,0.17466 0.23065,0 0.38964,-0.17914 0.15899,-0.18139 0.15899,-0.5352 0,-0.36948 -0.15227,-0.54863 -0.15228,-0.17914 -0.38516,-0.17914 -0.22618,0 -0.37397,0.1769 -0.14555,0.17467 -0.14555,0.5352 z m 2.29753,-1.46227 v -0.58222 h 0.62925 v 0.58222 z m 0,2.70061 v -2.37815 h 0.62925 v 2.37815 z m 1.05247,-0.67852 0.63149,-0.0963 q 0.0403,0.18363 0.16347,0.27992 0.12316,0.0941 0.34485,0.0941 0.24409,0 0.36725,-0.0896 0.0829,-0.0627 0.0829,-0.16795 0,-0.0717 -0.0448,-0.11869 -0.047,-0.0448 -0.2105,-0.0829 -0.76136,-0.16795 -0.96514,-0.30679 -0.28215,-0.19258 -0.28215,-0.53519 0,-0.30903 0.24408,-0.51952 0.24409,-0.2105 0.75689,-0.2105 0.48817,0 0.72554,0.15899 0.23736,0.159 0.32694,0.47026 l -0.59342,0.10973 q -0.0381,-0.13884 -0.14556,-0.21274 -0.10524,-0.0739 -0.3023,-0.0739 -0.24857,0 -0.35605,0.0694 -0.0717,0.0493 -0.0717,0.12764 0,0.0672 0.0627,0.11421 0.0851,0.0627 0.5867,0.1769 0.50384,0.11421 0.70314,0.27992 0.19706,0.16795 0.19706,0.46801 0,0.32694 -0.27319,0.56207 -0.2732,0.23513 -0.8084,0.23513 -0.48593,0 -0.77032,-0.19706 -0.28215,-0.19706 -0.36949,-0.5352 z m 3.86282,-1.69963 v 0.5016 h -0.42995 v 0.95843 q 0,0.29111 0.0112,0.34037 0.0134,0.047 0.056,0.0784 0.0448,0.0314 0.10749,0.0314 0.0873,0 0.25304,-0.0605 l 0.0537,0.48817 q -0.21945,0.0941 -0.49713,0.0941 -0.17018,0 -0.30678,-0.056 -0.1366,-0.0582 -0.20154,-0.1478 -0.0627,-0.0918 -0.0873,-0.24632 -0.0202,-0.10973 -0.0202,-0.44339 v -1.0368 h -0.28887 v -0.5016 h 0.28887 v -0.4725 l 0.63149,-0.36724 v 0.83974 z m 1.81384,1.62126 0.62701,0.10525 q -0.12093,0.34485 -0.38293,0.52623 -0.25976,0.17915 -0.65163,0.17915 -0.62029,0 -0.91812,-0.40532 -0.23513,-0.3247 -0.23513,-0.81958 0,-0.59118 0.30902,-0.92484 0.30903,-0.3359 0.78152,-0.3359 0.53072,0 0.83751,0.35158 0.30678,0.34933 0.29335,1.07263 h -1.57648 q 0.007,0.27991 0.15227,0.43666 0.14556,0.15451 0.36277,0.15451 0.1478,0 0.24857,-0.0806 0.10077,-0.0806 0.15227,-0.25976 z m 0.0358,-0.63597 q -0.007,-0.27319 -0.14108,-0.41427 -0.13436,-0.14331 -0.32694,-0.14331 -0.20601,0 -0.34037,0.15003 -0.13436,0.15003 -0.13212,0.40755 z m 1.73994,1.39286 h -0.62924 v -2.37815 h 0.58446 v 0.33813 q 0.15003,-0.2396 0.26872,-0.31574 0.12092,-0.0761 0.27319,-0.0761 0.21498,0 0.41427,0.11869 l -0.19482,0.54863 q -0.15899,-0.10301 -0.29559,-0.10301 -0.13211,0 -0.22393,0.0739 -0.0918,0.0717 -0.14555,0.262 -0.0515,0.19034 -0.0515,0.79719 z m 0.96067,-0.67852 0.63148,-0.0963 q 0.0403,0.18363 0.16347,0.27992 0.12317,0.0941 0.34486,0.0941 0.24408,0 0.36725,-0.0896 0.0829,-0.0627 0.0829,-0.16795 0,-0.0717 -0.0448,-0.11869 -0.047,-0.0448 -0.21049,-0.0829 -0.76137,-0.16795 -0.96515,-0.30679 -0.28215,-0.19258 -0.28215,-0.53519 0,-0.30903 0.24409,-0.51952 0.24408,-0.2105 0.75688,-0.2105 0.48817,0 0.72554,0.15899 0.23737,0.159 0.32694,0.47026 l -0.59342,0.10973 q -0.0381,-0.13884 -0.14555,-0.21274 -0.10525,-0.0739 -0.30231,-0.0739 -0.24856,0 -0.35605,0.0694 -0.0717,0.0493 -0.0717,0.12764 0,0.0672 0.0627,0.11421 0.0851,0.0627 0.5867,0.1769 0.50385,0.11421 0.70315,0.27992 0.19706,0.16795 0.19706,0.46801 0,0.32694 -0.2732,0.56207 -0.2732,0.23513 -0.80839,0.23513 -0.48593,0 -0.77033,-0.19706 -0.28215,-0.19706 -0.36948,-0.5352 z"
          id="text1143-1"
@@ -1703,31 +1740,31 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
       <path
          d="m 577.33008,468.69948 -7,-15"
          id="path3"
-         class="wire"
+         class="wire  mux-wire"
          sodipodi:nodetypes="cc"
          data-show-on-value="3"
-         style="stroke-linecap:round;stroke:#55ff00;stroke-opacity:1"
+         style=""
          inkscape:label="writeDataMuxSrc3" />
       <path
          d="m 577.33008,468.69948 -7,-5"
          id="path3-2"
-         class="wire"
+         class="wire  mux-wire"
          data-show-on-value="2"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="writeDataMuxSrc2" />
       <path
          d="m 577.33008,468.69948 -7,5"
          id="path3-2-3"
-         class="wire"
+         class="wire  mux-wire"
          data-show-on-value="1"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          inkscape:label="writeDataMuxSrc1" />
       <path
          d="m 577.33008,468.69948 -7,15"
          id="path3-2-3-6"
-         class="wire"
+         class="wire  mux-wire"
          data-show-on-value="0"
-         style="display:inline;mix-blend-mode:normal;fill:none;stroke:#55ff00;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style=""
          sodipodi:nodetypes="cc"
          inkscape:label="writeDataMuxSrc0" />
       <path
@@ -1755,12 +1792,14 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="label"
          aria-label="3" />
       <path
-         style="fill:none;fill-opacity:0;stroke:#000000;stroke-width:0.564999;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-9-3)"
+         style="marker-end:url(#Arrow-9-3)"
          d="m 577.33223,468.65626 h 20.65612"
          id="path32"
          inkscape:label="writeData"
          sodipodi:nodetypes="cc"
-         transform="translate(-1.7499999e-6,-1.2708333e-5)" />
+         transform="translate(-1.7499999e-6,-1.2708333e-5)"
+         stage="writeback"
+         class="wire" />
     </g>
     <g
        id="g42"
@@ -1773,14 +1812,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path42"
          class="wire"
          sodipodi:nodetypes="cc"
-         inkscape:label="readData1" />
+         inkscape:label="readData1"
+         stage="decode" />
       <path
          style="marker-start:url(#Junction);marker-end:url(#Arrow)"
          d="M 647.83084,429.25876 V 534.03802 H 540.23067 v -7.73819 H 259.31659 v -93.48806 h 6.97294"
          id="path9"
          class="wire"
          transform="translate(-185.53391,-130.5727)"
-         inkscape:label="readData1" />
+         inkscape:label="readData1"
+         stage="decode" />
     </g>
     <g
        id="g42-8"
@@ -1793,14 +1834,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path42-4"
          class="wire"
          sodipodi:nodetypes="cc"
-         inkscape:label="readData2" />
+         inkscape:label="readData2"
+         stage="decode" />
       <path
          style="marker-start:url(#Junction);marker-end:url(#Arrow)"
          d="m 500.5949,270.02609 v 24 h 103.15341"
          id="path48"
          class="wire"
          sodipodi:nodetypes="ccc"
-         inkscape:label="readData2" />
+         inkscape:label="readData2"
+         stage="decode" />
     </g>
   </g>
   <g
@@ -1820,7 +1863,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          height="15"
          x="42.436874"
          y="144.13994"
-         style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+         style=""
+         stage="fetch" />
       <text
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;white-space:pre;inline-size:27.6026;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
          class="component-name"
@@ -1839,7 +1883,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          inkscape:label="instruction"
          sodipodi:nodetypes="cc"
-         transform="translate(-416.84958,-282.48621)" />
+         transform="translate(-416.84958,-282.48621)"
+         stage="decode" />
     </g>
     <g
        id="aluControl"
@@ -1853,14 +1898,15 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          rx="12.450308"
          ry="20.404341"
          id="ellipse358"
-         style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.341076;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+         style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.341076;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+         stage="decode" />
       <text
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;white-space:pre;inline-size:23.8877;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
          class="component-name"
          x="80.386772"
          y="200.54567"
          id="text231"
-         transform="translate(123.53425,16.296851)"
+         transform="translate(123.71421,16.296851)"
          xml:space="preserve"><tspan
            x="80.386772"
            y="200.54567"
@@ -1880,7 +1926,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-6-8"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="opcode" />
+         inkscape:label="opcode"
+         stage="decode" />
       <text
          xml:space="preserve"
          x="504.70297"
@@ -1898,7 +1945,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          d="m 523.2814,419.81014 h 15.36512 v -19.03831"
          id="path4"
          class="wire"
-         inkscape:label="opcode" />
+         inkscape:label="opcode"
+         stage="decode" />
     </g>
     <g
        id="funct3Wire"
@@ -1922,14 +1970,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-4-4"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="funct3" />
+         inkscape:label="funct3"
+         stage="decode" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-9-2)"
          d="m 526.44994,429.84388 h 19.40695 v -29.10146"
          id="path5"
          class="wire"
          sodipodi:nodetypes="ccc"
-         inkscape:label="funct3" />
+         inkscape:label="funct3"
+         stage="decode" />
     </g>
     <g
        id="funct7Wire"
@@ -1953,14 +2003,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-66-3"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="funct7" />
+         inkscape:label="funct7"
+         stage="decode" />
       <path
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow-9-2)"
          d="m 524.75254,444.7695 h 28.01865 v -43.97619"
          id="path6"
          class="wire"
          sodipodi:nodetypes="ccc"
-         inkscape:label="funct7" />
+         inkscape:label="funct7"
+         stage="decode" />
     </g>
     <g
        id="rs1Wire"
@@ -1973,7 +2025,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19"
          class="wire"
          sodipodi:nodetypes="cccc"
-         inkscape:label="readReg1" />
+         inkscape:label="readReg1"
+         stage="decode" />
       <text
          xml:space="preserve"
          x="507.87155"
@@ -1991,7 +2044,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-7-1"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="readReg1" />
+         inkscape:label="readReg1"
+         stage="decode" />
     </g>
     <g
        id="rs2Wire"
@@ -2003,7 +2057,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          d="M 526.00841,439.87762 H 597.9097"
          id="path20"
          class="wire"
-         inkscape:label="readReg2" />
+         inkscape:label="readReg2"
+         stage="decode" />
       <text
          xml:space="preserve"
          x="507.43002"
@@ -2021,7 +2076,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-9-4"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="readReg2" />
+         inkscape:label="readReg2"
+         stage="decode" />
     </g>
     <g
        id="writeRegWire"
@@ -2034,7 +2090,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path21"
          class="wire"
          sodipodi:nodetypes="cccccc"
-         inkscape:label="writeReg" />
+         inkscape:label="writeReg"
+         stage="decode" />
       <text
          xml:space="preserve"
          x="506.76279"
@@ -2052,7 +2109,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          id="path19-5-9"
          class="wire"
          style="display:inline;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="writeReg" />
+         inkscape:label="writeReg"
+         stage="decode" />
     </g>
     <g
        id="immediateWire"
@@ -2073,14 +2131,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          d="m 499.95862,449.91139 h 21.91157"
          id="path19-0"
          class="wire"
-         inkscape:label="immediate" />
+         inkscape:label="immediate"
+         stage="decode" />
       <path
          style="display:inline;marker-end:url(#Arrow)"
          d="m 521.69502,449.94152 h 18.29431 v 6.35476 h 29.94561"
          id="path50"
          class="wire"
          transform="translate(-1.0625e-6)"
-         inkscape:label="immediate" />
+         inkscape:label="immediate"
+         stage="decode" />
       <path
          style="display:inline;marker-start:url(#Junction);marker-end:url(#Arrow)"
          d="m 540.00292,456.25278 v 64.26091 H 270.02749 v -73.27763 h 9.98907"
@@ -2088,14 +2148,16 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
          class="wire"
          sodipodi:nodetypes="ccccc"
          transform="translate(-1.0625e-6)"
-         inkscape:label="immediate" />
+         inkscape:label="immediate"
+         stage="decode" />
       <path
          style="display:inline;marker-start:url(#Junction);marker-end:url(#Arrow)"
          d="m 539.98699,520.48189 h 130.49422 v -57.39222 h 5.55008"
          id="path63"
          class="wire"
          transform="translate(-1.0625e-6)"
-         inkscape:label="immediate" />
+         inkscape:label="immediate"
+         stage="decode" />
     </g>
   </g>
   <g
@@ -2110,7 +2172,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        x="267.10193"
        y="169.74277"
        id="rect749"
-       style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+       style=""
+       stage="mem" />
     <text
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;direction:ltr;text-anchor:middle;white-space:pre;inline-size:32.6502;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        class="component-name"
@@ -2198,7 +2261,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        class="wire"
        transform="translate(-8.5416665e-6)"
        sodipodi:nodetypes="cccccc"
-       inkscape:label="memReadData" />
+       inkscape:label="memReadData"
+       stage="mem" />
   </g>
   <g
      id="instrMem"
@@ -2212,7 +2276,8 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        height="40"
        x="64.093948"
        y="132.02356"
-       style="fill:#fffffd;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+       style=""
+       stage="fetch" />
     <text
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.58611px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;white-space:pre;inline-size:32.9187;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        class="label"
@@ -2264,6 +2329,7 @@ text.value-label, text.value-label tspan { display:inline;    fill:#000000;    f
        transform="matrix(-1,0,0,1,393.61251,68.392125)"
        class="wire"
        sodipodi:nodetypes="cc"
-       inkscape:label="memReadData" />
+       inkscape:label="memReadData"
+       stage="fetch" />
   </g>
 </svg>

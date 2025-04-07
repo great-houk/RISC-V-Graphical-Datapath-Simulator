@@ -115,6 +115,9 @@ export class VisualSim {
 			} else {
 				$("#reg-mem-tabs").hide()
 			}
+
+			// Update everything else
+			this.update()
 		})
 
 		$("#consoleInput").on("keydown", (event) => {
@@ -185,14 +188,23 @@ export class VisualSim {
 			.powered.wire[data-marker-${pos}="${marker}"] {
 				marker-${pos}: url("#${marker}-powered") !important
 			}
+			.active.wire[data-marker-${pos}="${marker}"] {
+				marker-${pos}: url("#${marker}-active") !important
+			}
 		`))
 
 		// Create "powered" versions of markers used on paths so that we can make the markers change color with the wire
-		markers.forEach(markerId => $(`#${markerId}`).clone()
-			.attr("id", `${markerId}-powered`)
-			.addClass("powered")
-			.insertAfter(`#${markerId}`)
-		)
+		markers.forEach(markerId => {
+			$(`#${markerId}`).clone()
+				.attr("id", `${markerId}-powered`)
+				.addClass("powered")
+				.insertAfter(`#${markerId}`)
+
+			$(`#${markerId}`).clone()
+				.attr("id", `${markerId}-active`)
+				.addClass("active")
+				.insertAfter(`#${markerId}`)
+		})
 
 		let rules = [...hoverRules, ...markerRules]
 
@@ -289,7 +301,8 @@ export class VisualSim {
 		}
 
 		// Set up reg file view
-		$("#reg-mem-tabs").show()
+		if ($("#instrMem-tab").hasClass("active"))
+			$("#reg-mem-tabs").show()
 		let regFileTable = $(this.regFilePanel).find("tbody")
 		if (regFileTable.children().length == 0) {
 			for (let [i, name] of registerNames.entries()) {
@@ -433,6 +446,11 @@ export class VisualSim {
 		$(this.svg).find(".hide-when-running").toggle(!running)
 		$(this.svg).find(".hide-when-not-running").toggle(running)
 
+		let stage: number = this.sim.controlFSM.state;
+		const stageNames = ["fetch", "decode", "execute", "mem", "writeback"]
+		$(this.svg).find(".active:not(marker)").removeClass("active")
+		$(this.svg).find(`[stage=${stageNames[stage]}]`).addClass("active")
+
 		for (let [id, config] of Object.entries(this.datapathElements)) {
 			let elem = $(this.svg).find(`#${id}`)
 
@@ -484,8 +502,10 @@ export class VisualSim {
 	/** update controls, editors, views, and datapath */
 	private update() {
 		this.updateControls()
-		this.updateEditorsAndViews()
-		this.updateDatapath()
+		if ($("#instrMem-tab").hasClass("active"))
+			this.updateEditorsAndViews()
+		else
+			this.updateDatapath()
 	}
 
 	/** Handles console input */
@@ -494,6 +514,7 @@ export class VisualSim {
 	}
 	/** Start playing the simulation. */
 	public play() {
+		$("#speed").val(0) // reset speed slider to 0 (super slow)
 		if (this.step()) { // try to do first step immediately
 			this.updatePlaySpeed(); // calls setInterval() and sets this.playing
 		}

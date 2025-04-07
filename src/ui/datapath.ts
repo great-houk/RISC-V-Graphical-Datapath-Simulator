@@ -153,23 +153,18 @@ export const datapathElements: Record<string, DataPathElem> = {
 	// Control Wires
 	"pcLoad": {
 		description: "Load the new PC value",
-		powered: (sim) => sim.wires.loadPC == 1,
 	},
 	"branchNotZero": {
 		description: "Whether to branch when ALU result is not zero",
-		powered: (sim) => sim.wires.branchNotZero == 1,
 	},
 	"branchZero": {
 		description: "Whether to branch when ALU result is zero",
-		powered: (sim) => sim.wires.branchZero == 1,
 	},
 	"branchBaseSrc": {
 		description: "Whether to branch on the PC (0) or the first source register (1)",
-		powered: (sim) => sim.wires.jumpControlSrc == 1,
 	},
 	"aluCalc": {
 		description: "Load the new ALU inputs",
-		powered: (sim) => sim.wires.aluCalc == 1,
 	},
 	"aluOp": {
 		tooltip: (sim) => `Current ALU Op: ${intToStr(BigInt(sim.wires.aluOp), "bin", 4) + (sim.wires.aluAlt == 0 ? "0" : "1")} (${aluControlNames.match(sim.wires.aluOp, sim.wires.aluAlt)})`,
@@ -182,15 +177,12 @@ export const datapathElements: Record<string, DataPathElem> = {
 	},
 	"memWrite": {
 		description: "Whether to write to memory",
-		powered: (sim) => sim.wires.memWrite == 1,
 	},
 	"loadInstr": {
 		description: "Load the new instruction",
-		powered: (sim) => sim.wires.loadInstr == 1,
 	},
 	"regWrite": {
 		description: "Whether to write to the register file",
-		powered: (sim) => sim.wires.regWrite == 1,
 	},
 	"writeDataMuxSrc": {
 		tooltip: (sim) => `Reg Write Data Source: ${writeSrcNames.match(sim.wires.writeDataMuxSrc)}`,
@@ -222,10 +214,10 @@ export const datapathElements: Record<string, DataPathElem> = {
 		powered: (sim) => sim.wires.pcSrc == 1,
 	},
 	"jumpZeroWire": {
-		powered: (sim) => sim.wires.branchZero == 1 && sim.wires.aluZero == 1,
+		powered: (sim) => sim.wires.branchZero == 1 && sim.alu.zero == 1,
 	},
 	"jumpNZeroWire": {
-		powered: (sim) => sim.wires.branchNotZero == 1 && sim.wires.aluZero == 0,
+		powered: (sim) => sim.wires.branchNotZero == 1 && sim.alu.zero == 0,
 	},
 	// Component + Wire tooltips
 	"pc": {
@@ -253,7 +245,10 @@ export const datapathElements: Record<string, DataPathElem> = {
 	"alu": {
 		description: "The Arithmetic Logic Unit performs the cpu's arithmetic operations",
 		tooltip: (sim) => `${aluSummaries.match(sim.alu.op, sim.alu.alt)(sim.alu.in1, sim.alu.in2)
-			} = ${intToStr(sim.alu.output, "hex")}<br/>Zero: ${sim.wires.aluZero}`,
+			} = ${intToStr(sim.alu.output, "hex")}<br/>Zero: ${sim.alu.zero}`,
+	},
+	"aluZero": {
+		powered: (sim) => sim.alu.zero == 1,
 	},
 	"dataMem": {
 		description: "Stores the data the program is working with.",

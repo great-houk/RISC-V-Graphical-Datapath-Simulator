@@ -636,6 +636,7 @@ export class JumpControl implements Component {
 
 export class ALU implements Component {
 	public output: Bits = Bits(0n, 32, true);
+	public zero: Bit = 1;
 	public in1 = Bits(0n, 32);
 	public in2 = Bits(0n, 32);
 	public op: ALUOp = 0;
@@ -673,16 +674,18 @@ export class ALU implements Component {
 			this.alt = this.wires.aluAlt;
 
 			this.output = Bits(op(in1, in2), 33, signed).slice(0, 32);
+			this.zero = this.output.every(b => b == 0);
 		}
 	}
 
 	falling_edge() {
 		this.wires.aluOut = this.output;
-		this.wires.aluZero = this.output.every(b => b == 0);
+		this.wires.aluZero = this.zero;
 	}
 
 	reset_outputs() {
 		this.output = Bits(0n, 32);
+		this.zero = 1;
 		this.wires.aluOut = Bits(0n, 32);
 		this.wires.aluZero = 0;
 		this.in1 = Bits(0n, 32);

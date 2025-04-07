@@ -154,11 +154,12 @@
 				<button id="restart" class="btn btn-sm" title="Restart Simulation">
 					<i class="fas fa-stop text-danger"></i>
 				</button>
-				<div class="flex-grow-1">
-					<input id="speed" type="range" class="form-range" title="Speed" min="0" max="20" value="0">
-					<!-- 2 ** x steps per second -->
+				<div class="flex-grow-1" style="max-width: 40%;">
+					<input id="speed" type="range" class="form-range" title="Speed" min="0" max="20" step="0.5"
+						value="0" aria-label="Speed" />
 				</div>
-				<button id="help" class="btn btn-sm" title="Help / About" data-bs-toggle="modal"
+				<div class="flex-grow-1"></div>
+				<button id="help" class="btn btn-sm align-self-end" title="Help / About" data-bs-toggle="modal"
 					data-bs-target="#help-modal">
 					<i class="fas fa-question-circle text-info"></i>
 				</button>
