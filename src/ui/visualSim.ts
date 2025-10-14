@@ -267,10 +267,10 @@ export class VisualSim {
 		}
 
 		let lines = code.split("\n")
-		let asmCode: [bigint, string][] = assembled.instructions.map(([line, addr]) => {
+		let asmCode: [bigint, string, number][] = assembled.instructions.map(([line, addr]) => {
 			let instrInd = Number(addr - textStart) / 4
 			let instr = assembled.machineCode[instrInd]
-			return [instr, lines[line - 1].trim()]
+			return [instr, lines[line - 1].trim(), instrInd]
 		})
 		let machineCode = assembled.machineCode;
 
@@ -286,8 +286,8 @@ export class VisualSim {
 		// setup Instruction Memory view
 		let instrMemTable = $(this.instrMemPanel).find("#instrMem-table")
 		instrMemTable.empty()
-		for (let [i, [instr, line]] of asmCode.entries()) {
-			let addr = textStart + BigInt(i * 4)
+		for (let [i, [instr, line, index]] of asmCode.entries()) {
+			let addr = textStart + BigInt(index * 4)
 			let label = ""
 			for (const l in assembled.labels) {
 				if (assembled.labels[l] === addr) {
@@ -387,8 +387,10 @@ export class VisualSim {
 			// Update Instruction Memory and microarch
 			$(this.instrMemPanel).find(".current-instruction").removeClass("current-instruction")
 			if (this.state != "done") { // don't show current instruction if we are done.
-				let line = Number((Bits.toInt(this.sim.wires.pcVal) - textStart) / 4n)
-				let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[line]
+                let line = BigInt(Bits.toInt(this.sim.wires.pcVal)) // - textStart) / 4n)
+                let count = this.instrAddrs.indexOf(line)
+                console.log(line, count)
+				let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[count]
 				if (currentInstr) {
 					currentInstr.classList.add("current-instruction")
 					// currentInstr.scrollIntoView({ behavior: "smooth", block: "nearest" })

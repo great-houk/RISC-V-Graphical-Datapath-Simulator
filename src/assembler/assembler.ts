@@ -91,6 +91,16 @@ const instrRules: Rule[] = [
 		signature: ["id", "id", "id"],
 		conv: (op, [rd, rs1, rs2], line) => ({ type: "R", op: op, rd: rd, rs1: rs1, rs2: rs2, line: line }),
 	}, {
+        instructions: ["snez"],
+        format: "basic",
+        signature: ["id", "id"],
+        conv: (op, [rd, rs2], line) => ({type: "R", op: "sltu", rd: rd, rs1: "zero", rs2: rs2, line: line}),
+    }, {
+        instructions: ["neg"],
+        format: "basic",
+        signature: ["id", "id"],
+        conv: (op, [rd, rs2], line) => ({type: "R", op: "sub", rd: rd, rs1: "zero", rs2: rs2, line: line}),
+    }, {
 		instructions: ["addi"],
 		format: "basic",
 		signature: ["id", "id", "any"],
@@ -101,6 +111,16 @@ const instrRules: Rule[] = [
 		signature: ["id", "id", "num"],
 		conv: (op, [rd, rs1, imm], line) => ({ type: "I", op: op, rd: rd, rs1: rs1, imm: imm, line: line }),
 	}, {
+        instructions: ["not"],
+        format: "basic",
+        signature: ["id", "id"],
+        conv: (op, [rd, rs1], line) => ({type: "I", op: "xori", rd: rd, rs1: rs1, imm: -1, line: line}),
+    }, {
+        instructions: ["seqz"],
+        format: "basic",
+        signature: ["id", "id"],
+        conv: (op, [rd, rs1], line) => ({type: "I", op: "sltiu", rd: rd, rs1: rs1, imm: 1, line: line}),
+    }, {
 		instructions: ["slli", "srai", "srli"], // shifts are stored as a specialized I-format, 
 		format: "basic",
 		signature: ["id", "id", "num"],
@@ -233,12 +253,14 @@ export function assembleKeepLineInfo(program: string): Program {
 			data.push(newInstr)
 			addr += 4n
 		}
+        console.log(addr)
 	}
 
 	// Pass 2, actually assemble the assembly
 	for (let instr of data) {
 		if (instr.type !== "DIR") {
 			try {
+                console.log(machineCode.length)
 				var machineCodeInstr = assembleInstr(BigInt(machineCode.length) * 4n + textStart, instr, labels)
 			} catch (e: any) {
 				throw new AssemblerError(e.message, program, instr.line)
@@ -327,7 +349,7 @@ function assembleInstr(addr: bigint, instr: Instr, labels: Record<string, bigint
 	} else if (instr.type == "I") {
 		return Bits.join(Bits(temp.imm, 12, true), temp.rs1, funct3, temp.rd, opcode)
 	} else if (instr.type == "IS") {
-		return Bits.join(funct7, Bits(temp.imm, 5, true), temp.rs1, funct3, temp.rd, opcode)
+		return Bits.join(funct7, Bits(temp.imm, 5, false), temp.rs1, funct3, temp.rd, opcode)
 	} else if (instr.type == "S") {
 		let imm = Bits(temp.imm, 12, true)
 		return Bits.join(imm.slice(5, 12), temp.rs2, temp.rs1, funct3, imm.slice(0, 5), opcode)
