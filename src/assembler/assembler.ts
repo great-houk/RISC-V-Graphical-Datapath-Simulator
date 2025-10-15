@@ -253,14 +253,12 @@ export function assembleKeepLineInfo(program: string): Program {
 			data.push(newInstr)
 			addr += 4n
 		}
-        console.log(addr)
 	}
 
 	// Pass 2, actually assemble the assembly
 	for (let instr of data) {
 		if (instr.type !== "DIR") {
 			try {
-                console.log(machineCode.length)
 				var machineCodeInstr = assembleInstr(BigInt(machineCode.length) * 4n + textStart, instr, labels)
 			} catch (e: any) {
 				throw new AssemblerError(e.message, program, instr.line)

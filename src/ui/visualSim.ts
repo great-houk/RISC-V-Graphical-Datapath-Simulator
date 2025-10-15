@@ -389,7 +389,6 @@ export class VisualSim {
 			if (this.state != "done") { // don't show current instruction if we are done.
                 let line = BigInt(Bits.toInt(this.sim.wires.pcVal)) // - textStart) / 4n)
                 let count = this.instrAddrs.indexOf(line)
-                console.log(line, count)
 				let currentInstr = $(this.instrMemPanel).find(".view tbody tr")[count]
 				if (currentInstr) {
 					currentInstr.classList.add("current-instruction")
