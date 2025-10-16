@@ -270,6 +270,10 @@ export class VisualSim {
 		let asmCode: [bigint, string, number][] = assembled.instructions.map(([line, addr]) => {
 			let instrInd = Number(addr - textStart) / 4
 			let instr = assembled.machineCode[instrInd]
+            let disassembleInd = assembled.disassemble.map(([lnum,assem]) => lnum).indexOf(line)
+            if( disassembleInd != -1 ) {
+                return [instr, assembled.disassemble[disassembleInd][1].trim(), instrInd]
+            }
 			return [instr, lines[line - 1].trim(), instrInd]
 		})
 		let machineCode = assembled.machineCode;

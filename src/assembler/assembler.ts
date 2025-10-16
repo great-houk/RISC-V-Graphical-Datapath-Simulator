@@ -1,9 +1,9 @@
 import { Parser, Grammar } from 'nearley';
 import { Bit, Bits, b } from "utils/bits"
-import { registers, opcodes, textStart } from "simulator/constants";
+import { registerNames, registers, opcodes, textStart } from "simulator/constants";
 import grammar from './assembler.ne';
 
-interface Program { instructions: [number, bigint][], directives: [number, bigint][], machineCode: bigint[], labels: Record<string, bigint> }
+interface Program { instructions: [number, bigint][], directives: [number, bigint][], machineCode: bigint[], labels: Record<string, bigint>, disassemble: [number,string][] }
 
 // AST types that are returned from the parser.
 interface Arg { type: string, value: any }
@@ -40,6 +40,7 @@ type Directive = { type: "DIR", data: bigint[], size: number, line: number }
 function directiveMatch(directive: AsmDirective, line: number): Directive | string {
 	const sizedData = new Map([[".byte", 1], [".half", 2], [".word", 4], [".dword", 8]])
 	const string = [".string"]
+    const machinecode = [".instr"]
 	if (sizedData.has(directive.directive)) {
 		let data = []
 		let size = sizedData.get(directive.directive) as number
@@ -60,12 +61,27 @@ function directiveMatch(directive: AsmDirective, line: number): Directive | stri
 			for (let char of s) {
 				data.push(BigInt(char.charCodeAt(0)))
 			}
-			data.push(0n) // null terminator
+			data.push(0n) // null terminator0x00A50533
 			return { type: "DIR", data: data, size: 1, line: line }
 		} else {
 			return "Invalid directive argument"
 		}
-	} else {
+	} else if(machinecode.includes(directive.directive)) {
+		let data = []
+        if(directive.args.length != 1) {
+            return "Invalid number of directive arguments"
+        }
+		for (let arg of directive.args) {
+			if (arg.type == "num") {
+				let value = arg.value
+				if (value > 2n ** (32n)) throw Error("Value can't fit in 4 bytes")
+				data.push(value)
+			} else {
+				return "Invalid directive argument"
+			}
+		}
+		return { type: "DIR", data: data, size: -1, line: line }
+    } else {
 		return "Unknown directive"
 	}
 }
@@ -226,6 +242,7 @@ export function assembleKeepLineInfo(program: string): Program {
 	let instructions: [number, bigint][] = [];
 	let directives: [number, bigint][] = [];
 	let machineCode: bigint[] = [];
+    let disassemble: [number, string][] = [];
 
 	// Pass 1, read labels, convert AST into Instruction types
 	let addr = textStart;
@@ -237,12 +254,19 @@ export function assembleKeepLineInfo(program: string): Program {
 			if (typeof directive === "string") {
 				throw new AssemblerError(directive, program, instr.line)
 			}
-			// Add to list
-			directives.push([instr.line, addr]);
-			data.push(directive)
-			// Calc new addr, and align to 4 bytes
-			addr += BigInt(directive.data.length) * BigInt(directive.size);
-			addr = (addr + 3n) & ~3n;
+            if(directive.size > 0) {
+			    // Add to list
+			    directives.push([instr.line, addr]);
+			    data.push(directive)
+			    // Calc new addr, and align to 4 bytes
+			    addr += BigInt(directive.data.length) * BigInt(directive.size);
+			    addr = (addr + 3n) & ~3n;
+            } else {
+                disassemble.push([instr.line, disassembleInstruction(directive.data[0])])
+                instructions.push([instr.line, addr])
+                data.push(directive)
+                addr += 4n
+            }
 		} else {
 			let matchingRule = instrRules.find(r => ruleMatch(r, instr as AsmInstr))
 			if (matchingRule === undefined) {
@@ -265,7 +289,7 @@ export function assembleKeepLineInfo(program: string): Program {
 			}
 			machineCode.push(Bits.toInt(machineCodeInstr));
 		}
-		else {
+		else if(instr.size > 0 ){
 			let count = 0;
 			let size = instr.size;
 			for (let d of instr.data) {
@@ -291,10 +315,12 @@ export function assembleKeepLineInfo(program: string): Program {
 				}
 				count++;
 			}
-		}
+		} else {
+            machineCode.push(instr.data[0])
+        }
 	}
 
-	return { instructions: instructions, directives: directives, machineCode: machineCode, labels: labels };
+	return { instructions: instructions, directives: directives, machineCode: machineCode, labels: labels, disassemble: disassemble };
 }
 
 /** Assembles a single instruction. */
@@ -364,6 +390,111 @@ function assembleInstr(addr: bigint, instr: Instr, labels: Record<string, bigint
 	}
 }
 
+function disassembleInstruction(instr: bigint): string {
+    let assembly = ""
+    let instrbits = Bits(instr,32,false)
+    let opcode = instrbits.slice(0,7)
+    let func3 = instrbits.slice(12,15)
+    let rd = registerNames[Bits.toNumber(instrbits.slice(7,12),false)]
+    let rs1 = registerNames[Bits.toNumber(instrbits.slice(15,20),false)]
+    let rs2 = registerNames[Bits.toNumber(instrbits.slice(20,25),false)]
+    let imm = Bits.toNumber(instrbits.slice(20),false)
+
+    if(Bits.equal(opcode, opcodes['lui'][0])) {
+        assembly += "lui "+rd+", "+Bits.toNumber(instrbits.slice(12))
+    } else if(Bits.equal(opcode, opcodes['auipc'][0])) {
+        assembly += "auipc "+rd+", "+Bits.toNumber(instrbits.slice(12))
+    } else if(Bits.equal(opcode, opcodes['jal'][0])) {
+        assembly += "jal "+rd+", "+Bits.toNumber(Bits.join(instrbits[31], instrbits.slice(12,19), instrbits[20], instrbits.slice(21,31), b`0`), true)
+    } else if(Bits.equal(opcode, opcodes['jalr'][0])) {
+        assembly += "jalr "+rd+", "+imm +"("+rs1+")"
+    } else if(Bits.equal(opcode, opcodes['beq'][0])) {
+        let offset = Bits.toNumber(Bits.join(instrbits[31], instrbits[7], instrbits.slice(25,31), instrbits.slice(8,12), b`0`), true)
+        if(Bits.equal(func3, opcodes['beq'][1])) {
+            assembly += "beq " + rs1 + ", " + rs2 + ", " + offset
+        } else if(Bits.equal(func3, opcodes['bne'][1])) {
+            assembly += "bne " + rs1 + ", " + rs2 + ", " + offset
+        } else if(Bits.equal(func3, opcodes['blt'][1])) {
+            assembly += "blt " + rs1 + ", " + rs2 + ", " + offset
+        } else if(Bits.equal(func3, opcodes['bge'][1])) {
+            assembly += "bge " + rs1 + ", " + rs2 + ", " + offset
+        } else if(Bits.equal(func3, opcodes['bltu'][1])) {
+            assembly += "bltu " + rs1 + ", " + rs2 + ", " + offset
+        } else if(Bits.equal(func3, opcodes['bgeu'][1])) {
+            assembly += "bgeu " + rs1 + ", " + rs2 + ", " + offset
+        } 
+    } else if(Bits.equal(opcode, opcodes['sw'][0])) {
+        let imm2 = Bits.toNumber(Bits.join(instrbits.slice(25), instrbits.slice(7,12)))
+        if(Bits.equal(func3, opcodes['sb'][1])) {
+            assembly += "sb " +rs2 +", "+imm2+"("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['sh'][1])) {
+            assembly += "sh " +rs2 +", "+imm2+"("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['sw'][1])) {
+            assembly += "sw " +rs2 +", "+imm2+"("+rs1+")"
+        } 
+    } else if(Bits.equal(opcode, opcodes['lw'][0])) {
+        if(Bits.equal(func3, opcodes['lb'][1])) {
+            assembly += "lb " + rd + ", " + imm + "("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['lh'][1])) {
+            assembly += "lh " + rd + ", " + imm + "("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['lw'][1])) {
+            assembly += "lw " + rd + ", " + imm + "("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['lbu'][1])) {
+            assembly += "lbu " + rd + ", " + imm + "("+rs1+")"
+        } else if(Bits.equal(func3, opcodes['lhu'][1])) {
+            assembly += "lhu " + rd + ", " + imm + "("+rs1+")"
+        } 
+    } else if(Bits.equal(opcode, opcodes['addi'][0])) {
+        if(Bits.equal(func3, opcodes['addi'][1])) {
+            assembly += "addi "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['slti'][1])) {
+            assembly += "slti "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['sltiu'][1])) {
+            assembly += "sltiu "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['xori'][1])) {
+            assembly += "xori "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['ori'][1])) {
+            assembly += "ori "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['andi'][1])) {
+            assembly += "andi "+rd+", "+rs1+", "+imm
+        } else if(Bits.equal(func3, opcodes['slli'][1])) {
+            assembly += "slli "+rd+", "+rs1+", "+Bits.toNumber(instrbits.slice(20,25))
+        } else if(Bits.equal(func3, opcodes['srli'][1])) {
+            if(instrbits[30] == 1) {
+                assembly += "srai "+rd+", "+rs1+", "+Bits.toNumber(instrbits.slice(20,25))
+            } else {
+                assembly += "srli "+rd+", "+rs1+", "+Bits.toNumber(instrbits.slice(20,25))
+            }
+        } 
+    } else if(Bits.equal(opcode, opcodes['add'][0])) {
+        if(Bits.equal(func3, opcodes['add'][1])) {
+            if(instrbits[30] == 1) {
+                assembly += 'sub '+rd+", "+rs1+", "+rs2
+            } else {
+                assembly += "add "+rd+", "+rs1+", "+rs2
+            }
+        } else if(Bits.equal(func3, opcodes['slt'][1])) {
+            assembly += "slt "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['sltu'][1])) {
+            assembly += "sltu "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['xor'][1])) {
+            assembly += "xor "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['or'][1])) {
+            assembly += "or "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['and'][1])) {
+            assembly += "and "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['sll'][1])) {
+            assembly += "sll "+rd+", "+rs1+", "+rs2
+        } else if(Bits.equal(func3, opcodes['srl'][1])) {
+            if(instrbits[30] == 1) {
+                assembly += "sra "+rd+", "+rs1+", "+rs2
+            } else {
+                assembly += "srl "+rd+", "+rs1+", "+rs2
+            }
+        } 
+    }
+    return assembly
+}
 
 /** Assembler error. Shows message and line number with a preview */
 class AssemblerError extends Error {
