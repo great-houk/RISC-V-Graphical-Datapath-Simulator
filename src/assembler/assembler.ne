@@ -6,7 +6,7 @@ const lexer = moo.compile({
     WS:      {match: /[ \t]+/, value: x => undefined},
     newline: {match: '\n', lineBreaks: true},
     comment: {match: /#.*?$/, value: x => undefined},
-    number:  /0[bB][01]+|0[xX][0-9a-fA-F]+|[+-]?[0-9]+/,
+    number:  /0[bB][01_]+|0[xX][0-9a-fA-F_]+|[+-]?[0-9_]+/,
     identifier: /[a-zA-Z_][a-zA-Z_0-9]*|%..\([a-zA-Z_][a-zA-Z_0-9]*\)/,
     directive: /\.[a-zA-Z_0-9]+/,
     symbol: [",", "(", ")", ":"],
@@ -45,7 +45,7 @@ op -> %identifier {% ([op]) => op %} # keep op as a token so we can get line num
 arg -> (identifier | number) {% ([[arg]]) => arg %}
 
 identifier -> %identifier {% ([id]) => ({type: "id", value: id.text}) %}
-number -> %number {% ([n]) => ({type: "num", value: BigInt(n.text)}) %}
+number -> %number {% ([n]) => ({type: "num", value: BigInt(n.text.replace(/[ _]/g, ""))}) %}
 anything -> %anything {% ([a]) => ({type: "any", value: a.text}) %}
 
 directive -> %directive directiveArg ("," directiveArg):* {% 

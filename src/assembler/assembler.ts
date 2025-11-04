@@ -206,6 +206,11 @@ const instrRules: Rule[] = [
 		format: "argless",
 		signature: [],
 		conv: (op, [], line) => ({ type: "I", op: "jalr", rd: "zero", rs1: "ra", imm: 0, line: line }),
+	}, {
+		instructions: ["ecall"],
+		format: "argless",
+		signature: [],
+		conv: (op, [], line) => ({ type: "I", op: "ecall", rd: "zero", rs1: "zero", imm: 0, line: line }),
 	}
 ]
 
@@ -390,7 +395,7 @@ function assembleInstr(addr: bigint, instr: Instr, labels: Record<string, bigint
 	}
 }
 
-function disassembleInstruction(instr: bigint): string {
+export function disassembleInstruction(instr: bigint): string {
     let assembly = ""
     let instrbits = Bits(instr,32,false)
     let opcode = instrbits.slice(0,7)
@@ -492,6 +497,8 @@ function disassembleInstruction(instr: bigint): string {
                 assembly += "srl "+rd+", "+rs1+", "+rs2
             }
         } 
+    } else if(Bits.equal(opcode, opcodes['ecall'][0])) {
+        assembly += "ecall"
     }
     return assembly
 }

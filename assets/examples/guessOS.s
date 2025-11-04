@@ -50,59 +50,6 @@ parse_num_end:
 	add a1, t2, zero
 	ret
 
-# a1: addr of null terminated string
-# a2: if 0, don't print newline, otherwise do
-print_string:
-	# Get char, end if it's null
-	lb t0, 0(a1)
-	beq t0, zero, print_string_end
-	# Print char
-	lui t1, 0x00021
-	sb t0, 24(t1)
-	addi t0, zero, 0x10
-	sw t0, 20(t1)
-	# Increment and loop
-	addi a1, a1, 1
-	j print_string
-print_string_end:
-	# Print newline if needed
-	beq a2, zero, print_string_ret
-	addi t0, zero, 0xA # Newline
-	sb t0, 24(t1)
-	addi t0, zero, 0x10
-	sw t0, 20(t1)
-print_string_ret:
-	ret
-
-# a1: addr of the buffer to put the string in
-# Blocks until it receives a newline (0xA)
-get_line:
-	# Wait for status reg to say there's chars available
-	lui t0, 0x00021
-	addi t0, t0, 4
-	lw t1, -4(t0)
-	andi t1, t1, 0x10
-	beq t1, zero, get_line
-	# Read chars (t0 = read addr, t1 = final addr, t2 = char)
-	lw t1, -4(t0)
-	andi t1, t1, 0xF
-	addi t1, t1, 1
-	add t1, t1, t0
-get_line_loop:
-	lb t2, 0(t0)
-	sb t2, 0(a1)
-	addi t0, t0, 1
-	addi a1, a1, 1
-	bne t0, t1, get_line_loop
-	# Write back to status reg
-	lui t0, 0x00021
-	sw zero, 0(t0)
-	# Check if we found \n
-	addi t0, zero, 0xA
-	bne t0, t2, get_line
-	# Leave
-	sb zero, 0(a1)
-	ret
 
 main_loop:
 	# Save registers
@@ -118,16 +65,19 @@ invalid:
 	lui a1, %hi(error)
 	addi a1, a1, %lo(error)
 	addi a2, zero, 1
-	jal print_string
 	# Print out prompt
+    addi a0, zero, 11
+    ecall
 loop:
 	lui a1, %hi(prompt)
 	addi a1, a1, %lo(prompt)
 	addi a2, zero, 0
-	jal print_string
+    addi a0, zero, 11
+    ecall
 	# Get number
 	add a1, s1, zero
-	jal get_line
+	addi a0, zero, 21
+    ecall
 	# Parse
 	add a1, s1, zero
 	jal parse_num
@@ -136,7 +86,8 @@ loop:
 	addi t0, zero, 129
 	bgeu a1, t0, invalid
 	add a1, s1, zero
-	jal print_string
+    addi a0, zero, 11
+    ecall
 	# Print out if guess was correct, or it needs to be higher or lower
 	addi a2, zero, 1
 	beq s0, s2, print_success
@@ -144,19 +95,22 @@ loop:
 	# Higher
 	lui a1, %hi(higher)
 	addi a1, a1, %lo(higher)
-	jal print_string
+    addi a0, zero, 11
+    ecall
 	j loop
 	# Lower
 print_lower:
 	lui a1, %hi(lower)
 	addi a1, a1, %lo(lower)
-	jal print_string
+    addi a0, zero, 11
+    ecall
 	j loop
 	# Success
 print_success:
 	lui a1, %hi(success)
 	addi a1, a1, %lo(success)
-	jal print_string
+    addi a0, zero, 11
+    ecall
 	# Return
 	lw ra, 0(sp)
 	addi sp, sp, 4

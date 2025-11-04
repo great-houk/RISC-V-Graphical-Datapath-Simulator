@@ -261,6 +261,8 @@ export class ControlFSM implements Component {
 		[["0000011"], [1, WriteDataSrc.MemRead]],
 		// Jump
 		[["110X111"], [1, WriteDataSrc.PC4]],
+		// ecall
+		[["1110011"], [1, WriteDataSrc.PC4]],
 		// Doesn't write to a register
 		[["XXXXXXX"], [0, WriteDataSrc.ALUOut]],
 	]);
@@ -276,6 +278,7 @@ export class ControlFSM implements Component {
 		[["1100011", "101"], [1, 0, JumpControlSrc.PCImm]], // BGE
 		[["1100011", "110"], [0, 1, JumpControlSrc.PCImm]], // BLTU
 		[["1100011", "111"], [1, 0, JumpControlSrc.PCImm]], // BGEU
+		[["1110011", "XXX"], [1, 1, JumpControlSrc.RS1Imm]], // ECALL
 		[["XXXXXXX", "XXX"], [0, 0, JumpControlSrc.PCImm]], // Not a Jump
 	]);
 
@@ -322,7 +325,8 @@ export class ControlFSM implements Component {
 		else if (this.state == State.WRITEBACK) {
 			// Write to register file
 			let [regWrite, writeDataMuxSrc] = ControlFSM.register_table.match(this.wires.opcode, this.wires.funct3);
-			this.wires.regWrite = regWrite;
+            
+    		this.wires.regWrite = regWrite;
 			this.wires.writeDataMuxSrc = writeDataMuxSrc;
 
 			// Set up jump controller
@@ -379,10 +383,12 @@ export class InstructionRegister implements Component {
 	private static immediate_table = new TruthTable<(i: Bits) => Bits>([
 		// R-type -> no immediate
 		[["0110011"], (i) => b`0`],
-		// I-type -> imm[11:0] | rs1 | funct3 | rd
+		// I-type (IOps & Loads) -> imm[11:0] | rs1 | funct3 | rd
 		[["00X0011"], (i) => i.slice(20, 32)],
 		// I-type (JALR) -> imm[11:0] | rs1 | funct3 | rd
 		[["1100111"], (i) => i.slice(20, 32)],
+		// I-type (ECALL) -> imm[11:0] | rs1 | funct3 | rd
+		[["1110011"], (i) => i.slice(20, 32)],
 		// S-type -> imm[11:5] | rs2 | rs1 | funct3 | imm[4:0]
 		[["0100011"], (i) => Bits.join(i.slice(25, 32), i.slice(7, 12))],
 		// SB-type -> imm[12|10:5] | rs2 | rs1 | funct3 | imm[4:1|11]
@@ -415,6 +421,9 @@ export class InstructionRegister implements Component {
 
 		this.wires.opcode = this.instruction.slice(0, 7);
 		this.wires.writeReg = this.instruction.slice(7, 12);
+        if(Bits.equal(this.wires.opcode, b`1110011`)) // fix ecall/ebreak instructions
+                this.wires.writeReg = b`00001`; // to use ra as link register
+            
 		this.wires.funct3 = this.instruction.slice(12, 15);
 		this.wires.readReg1 = this.instruction.slice(15, 20);
 		this.wires.readReg2 = this.instruction.slice(20, 25);
@@ -469,7 +478,7 @@ export class RAM implements Component {
 		this.consoleDelay = this.consoleDelay == 0 ? 0 : this.consoleDelay - 1;
 		if (this.consoleDelay == 0) {
 			this.consoleRegs[5] &= 0x0Fn;
-			this.consoleDelay = Math.floor(Math.random() * 15) + 5;
+			this.consoleDelay = Math.floor(Math.random() * 150) + 5;
 		}
 
 		let bits = Bits(output, size * 8);
@@ -555,7 +564,11 @@ export class RAM implements Component {
 			}
 			let mask = size == 1 ? 0xFF : size == 2 ? 0xFFFF : 0xFFFF_FFFF;
 			return BigInt(Math.floor(Math.random() * mask))
-		} else {
+		} else if (addr >= 0x0 && addr <= 0x170) { // OS memory
+			if (write)
+				this.data.store(addr, size, data);
+			return this.data.load(addr, size);
+        } else {
 			throw new Error("Invalid memory address: " + addr.toString(16))
 		}
 	}

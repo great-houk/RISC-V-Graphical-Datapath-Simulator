@@ -68,5 +68,6 @@ export const opcodes: Record<string, [Bits, Bits, Bits]> = {
     "sra"  : [b`0110011`, b`101`, b`0100000`],   // R-type
     "or"   : [b`0110011`, b`110`, b`0000000`],   // R-type
     "and"  : [b`0110011`, b`111`, b`0000000`],   // R-type
+    "ecall": [b`1110011`, b`000`, b``       ],   // I-type
 }
 

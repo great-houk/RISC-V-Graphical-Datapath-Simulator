@@ -68,6 +68,7 @@ const opCodeNames = new TruthTable([
 	[["1100111"], "jalr"],
 	[["1101111"], "jal"],
 	[["0110111"], "lui"],
+    [["1110011"], "ecall"]
 ])
 
 const aluControlNames = new TruthTable([

@@ -28,9 +28,15 @@ export const examples: Example[] = [
 		url: require("assets/examples/selectionSort.s"),
 		dataMemRadix: "hex", regFileRadix: "hex",
 	}, {
-		name: "Guessing Game",
-		description: "A simple number guessing game",
+		name: "Guessing Game Polling",
+		description: "A simple number guessing game using polling IO",
 		url: require("assets/examples/guess.s"),
 		dataMemRadix: "hex", regFileRadix: "hex",
-	}
+	}, {
+        name: "Guessing Game OS",
+		description: "A simple number guessing game using OS IO",
+		url: require("assets/examples/guessOS.s"),
+		dataMemRadix: "hex", regFileRadix: "hex",
+        
+    }
 ]
