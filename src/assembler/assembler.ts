@@ -403,7 +403,7 @@ export function disassembleInstruction(instr: bigint): string {
     let rd = registerNames[Bits.toNumber(instrbits.slice(7,12),false)]
     let rs1 = registerNames[Bits.toNumber(instrbits.slice(15,20),false)]
     let rs2 = registerNames[Bits.toNumber(instrbits.slice(20,25),false)]
-    let imm = Bits.toNumber(instrbits.slice(20),false)
+    let imm = Bits.toNumber(instrbits.slice(20),true)
 
     if(Bits.equal(opcode, opcodes['lui'][0])) {
         assembly += "lui "+rd+", "+Bits.toNumber(instrbits.slice(12))
@@ -429,7 +429,7 @@ export function disassembleInstruction(instr: bigint): string {
             assembly += "bgeu " + rs1 + ", " + rs2 + ", " + offset
         } 
     } else if(Bits.equal(opcode, opcodes['sw'][0])) {
-        let imm2 = Bits.toNumber(Bits.join(instrbits.slice(25), instrbits.slice(7,12)))
+        let imm2 = Bits.toNumber(Bits.join(instrbits.slice(25), instrbits.slice(7,12)),true)
         if(Bits.equal(func3, opcodes['sb'][1])) {
             assembly += "sb " +rs2 +", "+imm2+"("+rs1+")"
         } else if(Bits.equal(func3, opcodes['sh'][1])) {

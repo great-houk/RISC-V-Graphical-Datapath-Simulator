@@ -478,7 +478,7 @@ export class RAM implements Component {
 		this.consoleDelay = this.consoleDelay == 0 ? 0 : this.consoleDelay - 1;
 		if (this.consoleDelay == 0) {
 			this.consoleRegs[5] &= 0x0Fn;
-			this.consoleDelay = Math.floor(Math.random() * 150) + 5;
+			this.consoleDelay = Math.floor(Math.random() * 5) + 5;
 		}
 
 		let bits = Bits(output, size * 8);
@@ -517,11 +517,7 @@ export class RAM implements Component {
 			}
 		}
 		// Program address range
-		if (addr >= textStart && addr + BigInt(size) <= stackStart) {
-			if (write)
-				this.data.store(addr, size, data);
-			return this.data.load(addr, size);
-		} else if (addr >= consoleNum && addr + BigInt(size) <= consoleWriteChars + 16n) {
+		if (addr >= consoleNum && addr + BigInt(size) <= consoleWriteChars + 16n) {
 			if (write) {
 				// Prevent writing to consoleChars
 				if (addr >= consoleChars && addr < consoleChars + 16n) {
@@ -568,7 +564,11 @@ export class RAM implements Component {
 			if (write)
 				this.data.store(addr, size, data);
 			return this.data.load(addr, size);
-        } else {
+        } else if (addr >= textStart) {
+			if (write)
+				this.data.store(addr, size, data);
+			return this.data.load(addr, size);
+		} else {
 			throw new Error("Invalid memory address: " + addr.toString(16))
 		}
 	}
